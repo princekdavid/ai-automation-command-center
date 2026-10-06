@@ -1,7 +1,6 @@
 from dataclasses import dataclass, field
 from typing import Any
 
-
 @dataclass(frozen=True)
 class Capability:
     id: str
@@ -9,6 +8,12 @@ class Capability:
     supported: bool
     evidence: list[str] = field(default_factory=list)
 
+@dataclass(frozen=True)
+class AdapterCapability:
+    id: str
+    name: str
+    supported: bool
+    description: str
 
 @dataclass(frozen=True)
 class FrameworkDNA:
@@ -24,7 +29,6 @@ class FrameworkDNA:
     dependency_files: list[str]
     capabilities: list[Capability]
     metadata: dict[str, Any] = field(default_factory=dict)
-
 
 @dataclass(frozen=True)
 class DiscoveredTest:

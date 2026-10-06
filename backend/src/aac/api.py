@@ -2,13 +2,28 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from aac.discovery.service import DiscoveryService
+from aac.discovery.test_service import TestDiscoveryService
 
 app = FastAPI(title="AI Automation Command Center", version="0.1.0")
 discovery = DiscoveryService()
+test_discovery = TestDiscoveryService(discovery=discovery)
 
 
 class DiscoverRequest(BaseModel):
     project_path: str
+
+
+def _test_to_dict(item) -> dict:
+    return {
+        "id": item.id,
+        "name": item.name,
+        "source_path": item.source_path,
+        "framework": item.framework,
+        "runner": item.runner,
+        "suite": item.suite,
+        "tags": item.tags,
+        "metadata": item.metadata,
+    }
 
 
 @app.get("/health")
@@ -39,3 +54,13 @@ def discover(request: DiscoverRequest) -> dict:
             for item in dna.capabilities
         ],
     }
+
+
+@app.post("/api/v1/tests/discovery")
+def discover_tests(request: DiscoverRequest) -> dict:
+    try:
+        tests = test_discovery.discover_tests(request.project_path)
+    except (ValueError, LookupError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    return {"count": len(tests), "tests": [_test_to_dict(item) for item in tests]}

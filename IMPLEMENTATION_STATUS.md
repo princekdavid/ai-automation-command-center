@@ -26,38 +26,46 @@ Last updated: 2026-10-06
 - [x] Read-only local project discovery service implemented
 - [x] Initial Python/pytest/Playwright/API detection implemented
 - [x] Discovery REST endpoint implemented
+- [x] Canonical adapter interface implemented
+- [x] Adapter registry implemented
+- [x] Reference pytest adapter implemented
+- [x] Normalized discovered-test model implemented
+- [x] Test discovery service implemented
+- [x] Test discovery REST endpoint implemented
 - [x] Unit/API tests added
 - [ ] Test suite executed in a reproducible CI environment
-- [ ] Framework adapter implemented
-- [ ] Test discovery implemented
+- [ ] Discovery hardening/exclusion policy implemented
+- [ ] Additional framework adapters implemented
 - [ ] Dashboard implemented
 - [ ] Execution pipeline implemented
 - [ ] AI analysis implemented
 
 ## Current State
 
-Phase 0 foundation is merged into main. Phase 1 has started on branch `feat/framework-discovery-foundation`.
+Phase 0 foundation is merged into main. Phase 1 now has a second implementation slice on branch `feat/adapter-test-discovery`.
 
-The first implementation slice is intentionally read-only. It accepts a local project path, inspects project files, builds canonical Framework DNA, detects initial capabilities, and exposes the result through a REST endpoint.
+The system can now discover project/framework metadata and, for a detected pytest project, use a framework-specific adapter to discover Python test functions into a framework-neutral `DiscoveredTest` model.
 
-No test execution or repository mutation is performed by this discovery slice.
+The adapter boundary is intentionally separate from the core domain. The pytest adapter performs AST-based read-only discovery and does not execute tests or modify the connected project.
 
 ## Known Limitations
 
 - Detection is heuristic and intentionally conservative.
 - Dependency parsing is not yet package-manager aware.
-- Discovery currently scans text content and may need ignore/exclusion rules for large or generated directories.
-- Only an initial set of languages/frameworks is detected.
+- Discovery currently scans text content and needs explicit ignore/exclusion rules for large or generated directories.
+- The pytest adapter currently discovers function-style tests named `test_*`; class/method semantics, parametrization, markers, fixtures, and inherited metadata require further work.
+- Only one reference adapter is currently implemented.
 - The current endpoint accepts a local filesystem path; secure remote repository connectors are not implemented yet.
 - No frontend has been implemented yet.
+- Runtime CI validation is not yet established.
 
 ## Next Step
 
 1. Harden discovery boundaries and exclusions.
-2. Define the canonical adapter interface.
-3. Implement a reference adapter without coupling the core domain to one framework.
-4. Add normalized test discovery.
-5. Expose discovery in the dashboard.
+2. Expand normalized pytest discovery for classes, markers, parametrization, and stable source metadata.
+3. Define adapter capability reporting.
+4. Add the first dashboard Test Explorer vertical slice.
+5. Establish CI and run the complete backend test suite reproducibly.
 
 ## Tracking Rule
 

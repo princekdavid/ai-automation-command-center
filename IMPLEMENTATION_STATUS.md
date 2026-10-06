@@ -33,6 +33,7 @@ Last updated: 2026-10-06
 - [x] Test discovery service implemented
 - [x] Test discovery REST endpoint implemented
 - [x] Unit/API tests added
+- [x] Test Explorer contract documented
 - [ ] Test suite executed in a reproducible CI environment
 - [ ] Discovery hardening/exclusion policy implemented
 - [ ] Additional framework adapters implemented
@@ -42,18 +43,20 @@ Last updated: 2026-10-06
 
 ## Current State
 
-Phase 0 foundation is merged into main. Phase 1 now has a second implementation slice on branch `feat/adapter-test-discovery`.
+Phase 0 foundation is merged into main. Phase 1 implementation is progressing through adapter and Test Explorer foundations.
 
-The system can now discover project/framework metadata and, for a detected pytest project, use a framework-specific adapter to discover Python test functions into a framework-neutral `DiscoveredTest` model.
+The system can discover project/framework metadata and, for a detected pytest project, use a framework-specific adapter to discover Python tests into a framework-neutral DiscoveredTest model.
 
-The adapter boundary is intentionally separate from the core domain. The pytest adapter performs AST-based read-only discovery and does not execute tests or modify the connected project.
+The Test Explorer contract now defines the dashboard boundary: the UI consumes normalized tests and never parses framework-specific source itself.
+
+No test execution or connected-project mutation is performed by the discovery slice.
 
 ## Known Limitations
 
 - Detection is heuristic and intentionally conservative.
 - Dependency parsing is not yet package-manager aware.
-- Discovery currently scans text content and needs explicit ignore/exclusion rules for large or generated directories.
-- The pytest adapter currently discovers function-style tests named `test_*`; class/method semantics, parametrization, markers, fixtures, and inherited metadata require further work.
+- Filesystem exclusion hardening is planned but not yet marked complete.
+- The pytest adapter currently needs richer support for markers, parametrization, fixtures, and other pytest metadata.
 - Only one reference adapter is currently implemented.
 - The current endpoint accepts a local filesystem path; secure remote repository connectors are not implemented yet.
 - No frontend has been implemented yet.
@@ -62,10 +65,10 @@ The adapter boundary is intentionally separate from the core domain. The pytest 
 ## Next Step
 
 1. Harden discovery boundaries and exclusions.
-2. Expand normalized pytest discovery for classes, markers, parametrization, and stable source metadata.
+2. Expand normalized pytest metadata.
 3. Define adapter capability reporting.
-4. Add the first dashboard Test Explorer vertical slice.
-5. Establish CI and run the complete backend test suite reproducibly.
+4. Establish reproducible backend CI validation.
+5. Build the first React/TypeScript Test Explorer vertical slice.
 
 ## Tracking Rule
 

@@ -24,3 +24,15 @@ class FrameworkDNA:
     dependency_files: list[str]
     capabilities: list[Capability]
     metadata: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class DiscoveredTest:
+    id: str
+    name: str
+    source_path: str
+    framework: str
+    runner: str | None
+    suite: str | None = None
+    tags: list[str] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)

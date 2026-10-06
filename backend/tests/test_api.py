@@ -26,3 +26,26 @@ def test_discovery_endpoint(tmp_path) -> None:
     assert body["language"] == "python"
     assert body["test_runner"] == "pytest"
     assert body["capabilities"][0]["id"] == "TEST_DISCOVERY"
+
+
+def test_test_discovery_endpoint(tmp_path) -> None:
+    (tmp_path / "pyproject.toml").write_text(
+        "[project]\ndependencies = ['pytest']\n",
+        encoding="utf-8",
+    )
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "test_login.py").write_text(
+        "def test_login():\n    assert True\n",
+        encoding="utf-8",
+    )
+
+    response = TestClient(app).post(
+        "/api/v1/tests/discovery",
+        json={"project_path": str(tmp_path)},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["count"] == 1
+    assert body["tests"][0]["name"] == "test_login"

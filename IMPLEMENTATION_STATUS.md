@@ -18,32 +18,57 @@ Last updated: 2026-10-06
 - [x] Architecture decisions documented
 - [x] Changelog established
 - [x] Contribution rules documented
-- [ ] Production implementation started
-- [ ] Framework adapter implemented
+
+## Phase 1 — Discovery Foundation
+- [x] Initial implementation architecture documented
+- [x] Python/FastAPI backend skeleton created
+- [x] Canonical Framework DNA and Capability models created
+- [x] Read-only local project discovery service implemented
+- [x] Initial Python/pytest/Playwright/API detection implemented
+- [x] Discovery REST endpoint implemented
+- [x] Canonical adapter interface implemented
+- [x] Adapter registry implemented
+- [x] Reference pytest adapter implemented
+- [x] Normalized discovered-test model implemented
+- [x] Test discovery service implemented
+- [x] Test discovery REST endpoint implemented
+- [x] Unit/API tests added
+- [x] Test Explorer contract documented
+- [ ] Test suite executed in a reproducible CI environment
+- [ ] Discovery hardening/exclusion policy implemented
+- [ ] Additional framework adapters implemented
 - [ ] Dashboard implemented
 - [ ] Execution pipeline implemented
 - [ ] AI analysis implemented
 
 ## Current State
 
-Phase 0 foundation documentation is complete on branch `docs/project-foundation`. No production application implementation has been completed yet.
+Phase 0 foundation is merged into main. Phase 1 implementation is progressing through adapter and Test Explorer foundations.
 
-The repository now contains the governing product, architecture, security, agent, skill, adapter, dashboard, UX, contribution, decision, and change-tracking documents required before implementation.
+The system can discover project/framework metadata and, for a detected pytest project, use a framework-specific adapter to discover Python tests into a framework-neutral DiscoveredTest model.
 
-## Branch / PR
+The Test Explorer contract now defines the dashboard boundary: the UI consumes normalized tests and never parses framework-specific source itself.
 
-Foundation documentation was added on `docs/project-foundation` and should be reviewed before merging into `main`.
+No test execution or connected-project mutation is performed by the discovery slice.
+
+## Known Limitations
+
+- Detection is heuristic and intentionally conservative.
+- Dependency parsing is not yet package-manager aware.
+- Filesystem exclusion hardening is planned but not yet marked complete.
+- The pytest adapter currently needs richer support for markers, parametrization, fixtures, and other pytest metadata.
+- Only one reference adapter is currently implemented.
+- The current endpoint accepts a local filesystem path; secure remote repository connectors are not implemented yet.
+- No frontend has been implemented yet.
+- Runtime CI validation is not yet established.
 
 ## Next Step
 
-After the foundation PR is reviewed and merged:
-
-1. Define the initial application/monorepo structure.
-2. Record the initial technology-stack decision.
-3. Define canonical domain models and adapter interfaces.
-4. Implement framework discovery first.
-5. Build the first adapter-driven vertical slice.
-6. Validate it before expanding dashboard functionality.
+1. Harden discovery boundaries and exclusions.
+2. Expand normalized pytest metadata.
+3. Define adapter capability reporting.
+4. Establish reproducible backend CI validation.
+5. Build the first React/TypeScript Test Explorer vertical slice.
 
 ## Tracking Rule
 

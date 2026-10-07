@@ -1,6 +1,6 @@
 # Implementation Status
 
-Last updated: 2026-10-06
+Last updated: 2026-10-07
 
 ## Foundation
 - [x] Product vision defined
@@ -36,20 +36,24 @@ Last updated: 2026-10-06
 - [x] Test Explorer contract documented
 - [x] Explicit adapter capability reporting added
 - [x] Reproducible backend CI workflow added
+- [x] Framework-neutral execution request/result contracts defined
 - [ ] CI workflow execution verified
 - [ ] Discovery hardening/exclusion policy formally validated
+- [ ] React/TypeScript Test Explorer implemented
+- [ ] Framework-native execution implemented
+- [ ] Execution/result integration implemented
 - [ ] Additional framework adapters implemented
-- [ ] Dashboard implemented
-- [ ] Execution pipeline implemented
+- [ ] Evidence pipeline implemented
+- [ ] Failure analysis implemented
 - [ ] AI analysis implemented
 
 ## Current State
 
-Phase 0 foundation is merged into main. Phase 1 now has explicit adapter capabilities and a reproducible GitHub Actions backend test workflow.
+Phase 1 has a read-only discovery foundation, normalized test discovery, explicit adapter capabilities, and a framework-neutral execution contract. No test execution is implemented yet.
 
-Adapters report supported and unsupported operations instead of allowing the dashboard to assume capabilities. The reference pytest adapter currently supports read-only test discovery; execution and result collection remain explicitly unsupported.
+The reference pytest adapter supports discovery only. Execution and result collection remain explicitly unsupported until the execution adapter contract is implemented and validated.
 
-The Test Explorer contract defines the UI/backend boundary. The UI consumes normalized tests and never parses framework-specific source itself.
+The Test Explorer contract defines the UI/backend boundary. The UI must consume normalized tests and never parse framework-specific source itself.
 
 ## Known Limitations
 
@@ -61,14 +65,16 @@ The Test Explorer contract defines the UI/backend boundary. The UI consumes norm
 - The current endpoint accepts a local filesystem path; secure remote repository connectors are not implemented yet.
 - No frontend has been implemented yet.
 - CI has been configured but its first run has not yet been verified.
+- Execution contracts are defined, but no runner/subprocess/remote execution is permitted by the current implementation.
 
 ## Next Step
 
-1. Verify the backend CI workflow.
-2. Finish formal discovery exclusion validation.
-3. Build the first React/TypeScript Test Explorer vertical slice.
-4. Define execution request/result contracts without implementing execution prematurely.
-5. Add the first non-Pytest adapter only after the generic contracts remain stable.
+1. Verify backend CI and resolve any failures.
+2. Complete formal discovery exclusion validation.
+3. Build the first React/TypeScript Test Explorer vertical slice against the normalized discovery API.
+4. Implement a pytest execution adapter only after capability/authorization checks are wired to the execution contract.
+5. Normalize execution results and evidence before enabling failure analysis.
+6. Add a second framework adapter only after the generic contracts remain stable.
 
 ## Tracking Rule
 

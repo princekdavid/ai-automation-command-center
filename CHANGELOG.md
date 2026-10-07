@@ -10,6 +10,8 @@ All notable project changes should be recorded here.
 - Execution safety policy with side effects disabled by default
 - Normalized per-test outcome and evidence-reference models
 - Execution contract documentation and unit tests
+- Initial React/TypeScript Test Explorer vertical slice
+- Project-path discovery integration and capability display in the dashboard
 
 ### Status
 

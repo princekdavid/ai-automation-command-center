@@ -13,8 +13,8 @@ class PytestAdapter(FrameworkAdapter):
     def capabilities(self) -> list[AdapterCapability]:
         return [
             AdapterCapability("TEST_DISCOVERY", "Test discovery", True, "AST-based read-only discovery"),
-            AdapterCapability("TEST_EXECUTION", "Test execution", False, "Execution contract is not implemented yet"),
-            AdapterCapability("RESULT_COLLECTION", "Result collection", False, "Execution/result normalization is not implemented yet"),
+            AdapterCapability("TEST_EXECUTION", "Test execution", True, "Controlled local pytest execution with explicit authorization"),
+            AdapterCapability("RESULT_COLLECTION", "Result collection", True, "JUnit XML results normalized into execution contracts"),
         ]
 
     def discover_tests(self, project_path: str, dna: FrameworkDNA) -> list[DiscoveredTest]:

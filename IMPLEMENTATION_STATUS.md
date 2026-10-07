@@ -39,7 +39,7 @@ Last updated: 2026-10-07
 - [x] Framework-neutral execution request/result contracts defined
 - [ ] CI workflow execution verified
 - [ ] Discovery hardening/exclusion policy formally validated
-- [ ] React/TypeScript Test Explorer implemented
+- [x] React/TypeScript Test Explorer vertical slice implemented
 - [ ] Framework-native execution implemented
 - [ ] Execution/result integration implemented
 - [ ] Additional framework adapters implemented
@@ -53,7 +53,9 @@ Phase 1 has a read-only discovery foundation, normalized test discovery, explici
 
 The reference pytest adapter supports discovery only. Execution and result collection remain explicitly unsupported until the execution adapter contract is implemented and validated.
 
-The Test Explorer contract defines the UI/backend boundary. The UI must consume normalized tests and never parse framework-specific source itself.
+The Test Explorer contract defines the UI/backend boundary. The new React/TypeScript vertical slice consumes normalized tests and adapter capabilities through the backend API; it does not parse framework-specific source.
+
+The dashboard is intentionally discovery-only at this stage. Execution controls are not exposed until the execution adapter and authorization boundary are implemented.
 
 ## Known Limitations
 

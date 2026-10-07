@@ -40,8 +40,8 @@ Last updated: 2026-10-07
 - [ ] CI workflow execution verified
 - [ ] Discovery hardening/exclusion policy formally validated
 - [x] React/TypeScript Test Explorer vertical slice implemented
-- [ ] Framework-native execution integrated into the API/authorization pipeline
-- [ ] Execution/result API integration implemented
+- [x] Framework-native pytest execution integrated behind capability and explicit authorization checks
+- [x] Execution/result API integration implemented
 - [ ] Additional framework adapters implemented
 - [ ] Evidence pipeline implemented
 - [ ] Failure analysis implemented
@@ -55,7 +55,7 @@ The reference pytest adapter remains discovery-only. A separate pytest executor 
 
 The Test Explorer contract defines the UI/backend boundary. The new React/TypeScript vertical slice consumes normalized tests and adapter capabilities through the backend API; it does not parse framework-specific source.
 
-The dashboard is intentionally discovery-only at this stage. Execution controls are not exposed until the execution adapter and authorization boundary are implemented.
+The dashboard remains discovery-first. The backend now exposes a controlled pytest execution endpoint; frontend execution controls remain intentionally gated until the execution UX and lifecycle model are implemented.
 
 ## Known Limitations
 
@@ -67,16 +67,16 @@ The dashboard is intentionally discovery-only at this stage. Execution controls 
 - The current endpoint accepts a local filesystem path; secure remote repository connectors are not implemented yet.
 - A first frontend/Test Explorer vertical slice is implemented; broader dashboard modules are not yet implemented.
 - CI has been configured but its first run has not yet been verified.
-- The pytest executor is implemented as a controlled boundary but is not yet exposed through the API; remote execution remains unsupported.
+- The pytest executor is exposed through a synchronous API boundary with explicit authorization; live/background execution, cancellation, remote execution, and artifact persistence remain unsupported.
 
 ## Next Step
 
-1. Verify backend CI and resolve any failures.
+1. Verify backend and frontend CI and resolve any failures.
 2. Complete formal discovery exclusion validation.
-3. Build the first React/TypeScript Test Explorer vertical slice against the normalized discovery API.
-4. Implement a pytest execution adapter only after capability/authorization checks are wired to the execution contract.
-5. Normalize execution results and evidence before enabling failure analysis.
-6. Add a second framework adapter only after the generic contracts remain stable.
+3. Add execution controls to Test Explorer using reported capabilities and explicit confirmation.
+4. Add run persistence/lifecycle APIs for live execution, cancellation, and history.
+5. Harden pytest result matching, parametrization handling, environment policy, and evidence storage.
+6. Add a second framework adapter only after the generic execution contracts remain stable.
 
 ## Tracking Rule
 

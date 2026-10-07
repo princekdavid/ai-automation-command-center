@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Define the framework-neutral boundary between the command center and future framework-native execution engines. This document defines contracts only; it does **not** authorize or implement test execution.
+Define the framework-neutral boundary between the command center and framework-native execution engines. The contract remains framework-neutral; the current MVP also includes a controlled local pytest executor behind an explicit authorization boundary.
 
 ## Request flow
 
@@ -24,9 +24,9 @@ Evidence / failure analysis
 
 - Constructing an `ExecutionRequest` never runs a command.
 - The caller must explicitly provide the target project and runner.
-- `allow_side_effects` defaults to `false`.
-- A future executor must verify adapter capability before execution.
-- A future executor must enforce the requested timeout and environment policy.
+- `allow_side_effects` defaults to `false` and is created server-side from an explicit execution authorization field; the UI must not silently enable it.
+- The execution service verifies adapter capability before invoking a registered executor.
+- The pytest executor enforces the requested timeout. Environment overrides remain a future hardening item and are not currently accepted by the API.
 - Raw framework output must be normalized before it reaches analysis or dashboard consumers.
 - No repository mutation, package installation, deployment, or production action is implied by this contract.
 
@@ -57,8 +57,8 @@ Evidence / failure analysis
 
 This milestone does not add:
 
-- subprocess execution
-- shell command construction
+- remote execution
+- arbitrary shell command construction
 - remote execution
 - repository writes
 - package installation
@@ -67,4 +67,4 @@ This milestone does not add:
 - AI-generated test execution
 - self-healing
 
-Those behaviors require separate contracts, capability checks, security decisions, and validation.
+Remote execution, retries, scheduling, AI-generated execution, and self-healing require separate contracts, capability checks, security decisions, and validation.

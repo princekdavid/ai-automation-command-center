@@ -56,3 +56,26 @@ def test_junit_result_matches_class_method_by_classname(tmp_path):
 
     assert result[0].outcome is TestOutcome.PASSED
     assert result[0].duration_seconds == 0.2
+
+
+
+def test_junit_result_disambiguates_same_test_name_by_source_module(tmp_path):
+    from aac.execution.contracts import TestOutcome
+
+    report = tmp_path / "results.xml"
+    report.write_text(
+        '<testsuite>'
+        '<testcase classname="test_first" name="test_same" time="0.1" />'
+        '<testcase classname="test_second" name="test_same" time="0.4" />'
+        '</testsuite>',
+        encoding="utf-8",
+    )
+    test = DiscoveredTest(
+        "pytest:second", "test_same", "tests/test_second.py", "python", "pytest",
+        "test_second", metadata={"line": 1, "kind": "function"},
+    )
+
+    result = PytestExecutor()._parse_junit(report, [test])
+
+    assert result[0].outcome is TestOutcome.PASSED
+    assert result[0].duration_seconds == 0.4

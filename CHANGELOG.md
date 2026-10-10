@@ -6,6 +6,19 @@ All notable project changes should be recorded here.
 
 ### Added
 
+- Framework-neutral execution request/result contracts
+- Execution safety policy with side effects disabled by default
+- Normalized per-test outcome and evidence-reference models
+- Execution contract documentation and unit tests
+- Initial React/TypeScript Test Explorer vertical slice
+- Project-path discovery integration and capability display in the dashboard
+
+### Status
+
+Phase 1 discovery and adapter foundations are implemented on the active development branch. Execution remains contract-only; no test commands are run by this milestone.
+
+## Previous Foundation
+
 - Product vision and non-goals
 - Product requirements document
 - High-level architecture
@@ -19,7 +32,3 @@ All notable project changes should be recorded here.
 - Security model
 - Agent rules
 - Architecture decision record
-
-### Status
-
-Foundation documentation is being established. Production implementation has not started.

@@ -53,8 +53,8 @@ PR #6 was closed as superseded by PR #9 because its stacked branch conflicted wi
 2. Review PR #9's green backend/frontend checks and merge it only after its base branch is integrated coherently.
 3. Review PR #10 after PR #9 is integrated; it is stacked on PR #9 and must not be merged ahead of its base.
 4. Reconcile and merge this status-only PR after code integration so the default branch reflects what actually shipped.
-4. Continue with background run lifecycle/cancellation, persistent history/evidence, and deterministic failure analysis.
-5. Add another framework adapter only after the normalized discovery/execution contracts remain stable.
+5. Continue with background run lifecycle/cancellation, persistent history/evidence, and broader validation of deterministic failure rules.
+6. Add another framework adapter only after the normalized discovery/execution contracts remain stable.
 
 ## Safety and completion rules
 

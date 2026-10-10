@@ -1,82 +1,58 @@
 # Implementation Status
 
-Last updated: 2026-10-07
+Last updated: 2026-10-11
 
 ## Foundation
-- [x] Product vision defined
-- [x] MVP scope defined
-- [x] Dashboard modules defined
-- [x] Framework-agnostic architecture direction defined
-- [x] Skill architecture direction defined
-- [x] Repository foundation started
-- [x] Skill architecture documented
-- [x] Framework adapter contract documented
-- [x] Dashboard specification documented
-- [x] UI/UX principles documented
-- [x] Security model documented
-- [x] Agent rules documented
-- [x] Architecture decisions documented
-- [x] Changelog established
-- [x] Contribution rules documented
+- [x] Product vision and MVP scope documented
+- [x] Dashboard modules, framework-agnostic architecture, and skill architecture documented
+- [x] UI/UX principles, security model, agent rules, architecture decisions, changelog, and contribution rules documented
 
-## Phase 1 — Discovery Foundation
-- [x] Initial implementation architecture documented
-- [x] Python/FastAPI backend skeleton created
-- [x] Canonical Framework DNA and Capability models created
-- [x] Read-only local project discovery service implemented
-- [x] Initial Python/pytest/Playwright/API detection implemented
-- [x] Discovery REST endpoint implemented
-- [x] Canonical adapter interface implemented
-- [x] Adapter registry implemented
-- [x] Reference pytest adapter implemented
-- [x] Normalized discovered-test model implemented
-- [x] Test discovery service implemented
-- [x] Test discovery REST endpoint implemented
-- [x] Unit/API tests added
-- [x] Test Explorer contract documented
-- [x] Explicit adapter capability reporting added
-- [x] Reproducible backend CI workflow added
-- [x] Framework-neutral execution request/result contracts defined
-- [ ] CI workflow execution verified
-- [ ] Discovery hardening/exclusion policy formally validated
-- [x] React/TypeScript Test Explorer vertical slice implemented
-- [x] Framework-native pytest execution integrated behind capability and explicit authorization checks
-- [x] Execution/result API integration implemented
-- [ ] Additional framework adapters implemented
-- [ ] Evidence pipeline implemented
-- [ ] Failure analysis implemented
-- [ ] AI analysis implemented
+## Phase 1 — Discovery and Test Explorer
+- [x] Python/FastAPI backend skeleton and canonical Framework DNA/Capability models
+- [x] Read-only local project discovery and discovery REST endpoint
+- [x] Canonical adapter interface, registry, and reference pytest adapter
+- [x] Normalized discovered-test model and test discovery REST endpoint
+- [x] Adapter capability reporting and backend CI workflow
+- [x] React/TypeScript Test Explorer vertical slice
+- [x] Framework-neutral execution request/result contracts
+- [x] Controlled local pytest executor with explicit authorization, timeout, and JUnit normalization
+- [x] Execution API integration and authorization/capability checks
+- [x] Regression coverage for pytest collection semantics and normalized failure details
+- [ ] Latest backend/frontend CI verified after the 2026-10-11 commits
+- [ ] Discovery exclusions and filesystem boundary policy fully validated
+- [ ] Execution controls, background lifecycle, cancellation, and run history
+- [ ] Persistent evidence pipeline
+- [ ] Deterministic failure analysis
+- [ ] Additional framework adapters
+- [ ] AI analysis
 
 ## Current State
 
-Phase 1 has a read-only discovery foundation, normalized test discovery, explicit adapter capabilities, a Test Explorer vertical slice, and a controlled pytest executor boundary. Execution is not yet exposed through the API because authorization and integration remain incomplete.
+The repository contains an initial discovery-to-Test-Explorer vertical slice and a controlled, synchronous pytest execution API. Execution requires explicit authorization; test IDs must resolve to tests discovered for the project, and the adapter must report execution support. The UI is currently discovery-focused and does not yet expose run controls or a live execution lifecycle.
 
-The reference pytest adapter remains discovery-only. A separate pytest executor now exists, but it requires explicit side-effect authorization and discovered-test mapping; API orchestration is still pending.
-
-The Test Explorer contract defines the UI/backend boundary. The new React/TypeScript vertical slice consumes normalized tests and adapter capabilities through the backend API; it does not parse framework-specific source.
-
-The dashboard remains discovery-first. The backend now exposes a controlled pytest execution endpoint; frontend execution controls remain intentionally gated until the execution UX and lifecycle model are implemented.
+Recent fixes on the open feature branches:
+- Pytest AST discovery now targets module-level `test_*` functions and `test_*` methods inside `Test*` classes, avoiding nested helper false positives and duplicate method records.
+- Discovery skips common generated/virtual-environment folders and rejects resolved test roots/files that escape the selected project directory.
+- JUnit failure normalization now preserves a failure message supplied as an XML attribute when the element has no text body.
 
 ## Known Limitations
 
-- Detection is heuristic and intentionally conservative.
-- Dependency parsing is not yet package-manager aware.
-- Filesystem exclusion behavior has initial safeguards but still requires formal validation.
-- The pytest adapter needs richer support for markers, parametrization, fixtures, and other pytest metadata.
-- Only one reference adapter is currently implemented.
-- The current endpoint accepts a local filesystem path; secure remote repository connectors are not implemented yet.
-- A first frontend/Test Explorer vertical slice is implemented; broader dashboard modules are not yet implemented.
-- CI has been configured but its first run has not yet been verified.
-- The pytest executor is exposed through a synchronous API boundary with explicit authorization; live/background execution, cancellation, remote execution, and artifact persistence remain unsupported.
+- Framework detection remains heuristic; dependency metadata is not yet parsed comprehensively by each package manager.
+- Pytest markers, parametrization, fixtures, dynamic collection, and all pytest edge cases are not yet normalized.
+- Discovery exclusions have initial safeguards but require more comprehensive tests, especially for symlinks and large monorepos.
+- Only pytest is implemented as a reference adapter.
+- The API accepts a local filesystem path; secure remote repository connectors are not implemented.
+- Execution is synchronous and local. Background jobs, cancellation, persistent run history, artifact storage, and remote execution are unsupported.
+- CI passed on earlier PR #6 commit `9fd283c94b64df74edbfd781b30b9ebef732d590`; new commits from 2026-10-11 still require fresh backend/frontend validation. Do not treat earlier checks as validation of the latest head.
 
-## Next Step
+## Next Steps
 
-1. Verify backend and frontend CI and resolve any failures.
-2. Complete formal discovery exclusion validation.
-3. Add execution controls to Test Explorer using reported capabilities and explicit confirmation.
-4. Add run persistence/lifecycle APIs for live execution, cancellation, and history.
-5. Harden pytest result matching, parametrization handling, environment policy, and evidence storage.
-6. Add a second framework adapter only after the generic execution contracts remain stable.
+1. Obtain fresh backend and frontend CI results for the latest commits.
+2. Complete discovery exclusion and symlink-boundary regression coverage.
+3. Add capability-gated execution controls with explicit confirmation in Test Explorer.
+4. Introduce a run lifecycle/persistence model before attempting background execution or cancellation.
+5. Add durable evidence references and deterministic failure categories.
+6. Add another framework adapter only after the normalized discovery/execution contracts are stable.
 
 ## Tracking Rule
 

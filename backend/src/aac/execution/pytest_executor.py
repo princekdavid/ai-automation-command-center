@@ -41,7 +41,13 @@ class PytestExecutor:
             case = next((c for c in cases if c.attrib.get("name") == node_name), None)
             if case is None: outcome, message = TestOutcome.ERROR, "Test result was not found in report"
             elif case.find("failure") is not None or case.find("error") is not None:
-                node = case.find("failure") or case.find("error"); outcome, message = TestOutcome.FAILED, node.text if node is not None else None
+                node = case.find("failure")
+                if node is None:
+                    node = case.find("error")
+                message = None
+                if node is not None:
+                    message = node.text or node.attrib.get("message") or node.attrib.get("type")
+                outcome = TestOutcome.FAILED
             elif case.find("skipped") is not None: outcome, message = TestOutcome.SKIPPED, None
             else: outcome, message = TestOutcome.PASSED, None
             results.append(TestResult(item.id, outcome, float(case.attrib["time"]) if case is not None and "time" in case.attrib else None, message))

@@ -35,3 +35,24 @@ def test_junit_failure_message_is_preserved_when_failure_element_has_no_text(tmp
 
     assert result[0].outcome is TestOutcome.FAILED
     assert result[0].message == "assertion failed"
+
+
+
+def test_junit_result_matches_class_method_by_classname(tmp_path):
+    from aac.execution.contracts import TestOutcome
+
+    report = tmp_path / "results.xml"
+    report.write_text(
+        '<testsuite><testcase classname="test_login.TestLogin" name="test_method" time="0.2" />'
+        '</testsuite>',
+        encoding="utf-8",
+    )
+    test = DiscoveredTest(
+        "pytest:method", "test_method", "tests/test_login.py", "python", "pytest",
+        "TestLogin", metadata={"line": 4, "kind": "method"},
+    )
+
+    result = PytestExecutor()._parse_junit(report, [test])
+
+    assert result[0].outcome is TestOutcome.PASSED
+    assert result[0].duration_seconds == 0.2

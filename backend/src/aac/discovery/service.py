@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 from aac.domain.models import Capability, FrameworkDNA
@@ -14,6 +15,13 @@ class DiscoveryService:
         "build.gradle": ("java", "gradle"),
         "build.gradle.kts": ("kotlin", "gradle"),
     }
+    EXCLUDED_DIRS = {
+        ".git", ".venv", "venv", "env", "__pycache__", "node_modules",
+        "site-packages", ".tox", ".pytest_cache", ".mypy_cache", ".ruff_cache",
+        "build", "dist", "coverage", ".next", ".turbo",
+    }
+    MAX_INSPECTED_FILE_BYTES = 2_000_000
+    MAX_DISCOVERED_PATHS = 100
 
     def discover(self, project_path: str) -> FrameworkDNA:
         root = Path(project_path).expanduser().resolve()
@@ -21,7 +29,8 @@ class DiscoveryService:
             raise ValueError(f"Project path is not a directory: {project_path}")
 
         dependency_files = sorted(
-            path.name for path in root.iterdir() if path.is_file() and path.name in self.DEPENDENCY_FILES
+            path.name for path in root.iterdir()
+            if path.is_file() and not path.is_symlink() and path.name in self.DEPENDENCY_FILES
         )
         language = self._detect_language(dependency_files)
         package_manager = self._detect_package_manager(dependency_files)
@@ -65,19 +74,80 @@ class DiscoveryService:
         return self._first_named_match(root, candidates.get(language, ()))
 
     def _detect_ui_framework(self, root: Path, language: str | None) -> str | None:
-        names = {"python": ("playwright", "selenium"), "javascript": ("playwright", "cypress", "selenium"), "typescript": ("playwright", "cypress", "selenium"), "java": ("playwright", "selenium"), "kotlin": ("playwright", "selenium")}
+        names = {
+            "python": ("playwright", "selenium"),
+            "javascript": ("playwright", "cypress", "selenium"),
+            "typescript": ("playwright", "cypress", "selenium"),
+            "java": ("playwright", "selenium"),
+            "kotlin": ("playwright", "selenium"),
+        }
         return self._first_match(root, names.get(language, ()))
 
     def _detect_api_framework(self, root: Path, language: str | None) -> str | None:
         names = {"python": ("requests", "httpx"), "javascript": ("axios",), "typescript": ("axios",)}
         return self._first_match(root, names.get(language, ()))
 
+    def _iter_project_paths(self, root: Path):
+        """Yield bounded, in-project paths while pruning generated and symlinked directories."""
+        root = root.resolve()
+
+        def onerror(_error: OSError) -> None:
+            # Permission-denied or concurrently removed directories are skipped, not fatal.
+            return None
+
+        for current, dirnames, filenames in os.walk(root, topdown=True, followlinks=False, onerror=onerror):
+            current_path = Path(current)
+            safe_dirs = []
+            for name in sorted(dirnames):
+                candidate = current_path / name
+                if name in self.EXCLUDED_DIRS or name.startswith(".") or candidate.is_symlink():
+                    continue
+                try:
+                    if candidate.resolve().is_relative_to(root) and candidate.is_dir():
+                        safe_dirs.append(name)
+                except OSError:
+                    continue
+            dirnames[:] = safe_dirs
+
+            try:
+                if not current_path.resolve().is_relative_to(root):
+                    dirnames[:] = []
+                    continue
+            except OSError:
+                dirnames[:] = []
+                continue
+
+            for name in sorted(filenames):
+                path = current_path / name
+                try:
+                    if path.is_symlink() or not path.resolve().is_relative_to(root):
+                        continue
+                except OSError:
+                    continue
+                yield path
+
+            for name in safe_dirs:
+                yield current_path / name
+
     def _find_test_paths(self, root: Path) -> list[str]:
-        return sorted(str(path.relative_to(root)) for path in root.rglob("*") if path.is_dir() and path.name in {"tests", "test", "__tests__"})[:100]
+        found = [
+            str(path.relative_to(root))
+            for path in self._iter_project_paths(root)
+            if path.is_dir() and path.name in {"tests", "test", "__tests__"}
+        ]
+        return sorted(set(found))[: self.MAX_DISCOVERED_PATHS]
 
     def _find_config_files(self, root: Path) -> list[str]:
-        known = {"pytest.ini", "tox.ini", "setup.cfg", "playwright.config.ts", "playwright.config.js", "cypress.config.ts", "cypress.config.js"}
-        return sorted(str(path.relative_to(root)) for path in root.rglob("*") if path.is_file() and path.name in known)[:100]
+        known = {
+            "pytest.ini", "tox.ini", "setup.cfg", "playwright.config.ts",
+            "playwright.config.js", "cypress.config.ts", "cypress.config.js",
+        }
+        found = [
+            str(path.relative_to(root))
+            for path in self._iter_project_paths(root)
+            if path.is_file() and path.name in known
+        ]
+        return sorted(set(found))[: self.MAX_DISCOVERED_PATHS]
 
     def _first_named_match(self, root: Path, candidates: tuple[tuple[str, str], ...]) -> str | None:
         for needle, result in candidates:
@@ -92,10 +162,10 @@ class DiscoveryService:
         return None
 
     def _contains(self, root: Path, needle: str) -> bool:
-        for path in root.rglob("*"):
-            if not path.is_file() or path.stat().st_size > 2_000_000:
-                continue
+        for path in self._iter_project_paths(root):
             try:
+                if not path.is_file() or path.stat().st_size > self.MAX_INSPECTED_FILE_BYTES:
+                    continue
                 content = path.read_text(encoding="utf-8", errors="ignore").lower()
             except OSError:
                 continue

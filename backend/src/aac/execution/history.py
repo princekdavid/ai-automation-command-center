@@ -5,9 +5,10 @@ Raw stdout/stderr and raw per-test failure messages are intentionally not persis
 import json
 import os
 import sqlite3
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 from aac.analysis.failure_classifier import classify_failure
 from aac.execution.contracts import ExecutionRequest, ExecutionResult
@@ -42,6 +43,18 @@ class SQLiteExecutionHistoryStore:
         )
         return connection
 
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        connection = self._connect()
+        try:
+            yield connection
+            connection.commit()
+        except Exception:
+            connection.rollback()
+            raise
+        finally:
+            connection.close()
+
     def save(self, request: ExecutionRequest, result: ExecutionResult) -> None:
         created_at = datetime.now(timezone.utc).isoformat()
         summaries: list[dict[str, Any]] = []
@@ -59,7 +72,7 @@ class SQLiteExecutionHistoryStore:
                 }
             )
 
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.execute(
                 """
                 INSERT INTO execution_history

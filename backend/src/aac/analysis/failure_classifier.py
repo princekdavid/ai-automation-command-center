@@ -42,7 +42,7 @@ _RULES: tuple[tuple[FailureCategory, tuple[str, ...], str], ...] = (
         "httpx.connecterror", "requests.exceptions.connectionerror",
     ), "The failure contains a network, DNS, or TLS connection signal."),
     (FailureCategory.ASSERTION_FAILURE, (
-        "assertionerror", "assertion failed", "assert ", "expected ", "actual ",
+        "assertionerror", "assertion failed", "assert ",
         "does not equal", "not equal to", "mismatch",
     ), "The test's expected and actual values appear not to match."),
     (FailureCategory.TEST_SETUP, (

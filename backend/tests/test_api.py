@@ -65,3 +65,17 @@ def test_execution_endpoint_requires_explicit_authorization(tmp_path):
     assert response.status_code == 200
     assert response.json()["status"] == "rejected"
     assert "authorization" in response.json()["error"].lower()
+
+
+
+def test_local_frontend_origin_is_allowed_by_cors() -> None:
+    response = TestClient(app).options(
+        "/api/v1/tests/discovery",
+        headers={
+            "Origin": "http://localhost:5173",
+            "Access-Control-Request-Method": "POST",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.headers["access-control-allow-origin"] == "http://localhost:5173"

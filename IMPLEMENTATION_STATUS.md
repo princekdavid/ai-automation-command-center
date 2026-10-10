@@ -25,6 +25,7 @@ The following work is proposed in open PRs and is not yet confirmed as delivered
 | [#8](https://github.com/princekdavid/ai-automation-command-center/pull/8) | Reconcile implementation status | `main` | Open; documentation-only |
 | [#9](https://github.com/princekdavid/ai-automation-command-center/pull/9) | Reconciled Test Explorer, authorized local pytest execution, CORS, and setup docs | `feat/adapter-capabilities-ci-test-explorer` | Open; backend and frontend checks passed on validated code commit; latest commits are docs-only |
 | [#10](https://github.com/princekdavid/ai-automation-command-center/pull/10) | Deterministic failure classification API and UI | `feat/execution-contracts-reconciled` | Open; backend and frontend checks passed on code commit `1394883aecbfa006d3e9c3e044abc75572049928`; later commits are docs-only |
+| [#11](https://github.com/princekdavid/ai-automation-command-center/pull/11) | SQLite execution history and recent-runs UI | `feat/deterministic-failure-analysis` | Open; backend and frontend checks passed on code commit `62d0fe7d63532d04da99714739b09c214a9dd01a`; later commits are docs-only |
 
 PR #6 was closed as superseded by PR #9 because its stacked branch conflicted with the latest discovery changes. Do not merge PR #6; review PR #9 instead.
 
@@ -35,6 +36,8 @@ PR #6 was closed as superseded by PR #9 because its stacked branch conflicted wi
 - The same code commit passed the frontend build: [frontend run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634579).
 - PR #10 backend tests passed on commit `1394883aecbfa006d3e9c3e044abc75572049928`: [backend run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897550).
 - The same PR #10 code commit passed the frontend build: [frontend run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897545).
+- PR #11 backend tests passed on commit `62d0fe7d63532d04da99714739b09c214a9dd01a`: [backend run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194742).
+- The same PR #11 code commit passed the frontend build: [frontend run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
 - After each pair of checks, only documentation was changed. No backend/frontend source changed after the corresponding validated code commit.
 - PR #7's status-only scheduler passed. It only inspects PR/check status unless an external agent URL/token is configured; no such agent service is provisioned.
 - No check runs were found for inspected PR #2–#4 heads. The cumulative code has backend test coverage through PR #9, but absence of individual checks on those older PRs is not itself a pass.
@@ -52,9 +55,10 @@ PR #6 was closed as superseded by PR #9 because its stacked branch conflicted wi
 1. Review the cumulative PR #2–#5 dependency chain and decide the intended merge sequence before merging any overlapping branches.
 2. Review PR #9's green backend/frontend checks and merge it only after its base branch is integrated coherently.
 3. Review PR #10 after PR #9 is integrated; it is stacked on PR #9 and must not be merged ahead of its base.
-4. Reconcile and merge this status-only PR after code integration so the default branch reflects what actually shipped.
-5. Continue with background run lifecycle/cancellation, persistent history/evidence, and broader validation of deterministic failure rules.
-6. Add another framework adapter only after the normalized discovery/execution contracts remain stable.
+4. Review PR #11 after PR #10 is integrated; it is stacked on PR #10 and must not be merged ahead of its base.
+5. Reconcile and merge this status-only PR after code integration so the default branch reflects what actually shipped.
+6. Continue with background run lifecycle/cancellation, evidence artifact storage, and broader validation of deterministic failure rules.
+7. Add another framework adapter only after the normalized discovery/execution contracts remain stable.
 
 ## Safety and completion rules
 

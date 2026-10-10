@@ -87,3 +87,8 @@ class ExecutionResult:
     completed_at: str | None = None
     error: str | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+
+
+# These domain types start with "Test" but are not pytest test classes.
+TestOutcome.__test__ = False
+TestResult.__test__ = False

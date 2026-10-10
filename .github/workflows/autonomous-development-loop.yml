@@ -52,8 +52,21 @@ jobs:
           print(f"Inspected {len(prs)} open pull requests.")
           PY
 
+      - name: Check agent configuration
+        id: agent-config
+        shell: bash
+        env:
+          AGENT_URL: ${{ secrets.AUTONOMOUS_AGENT_URL }}
+          AGENT_TOKEN: ${{ secrets.AUTONOMOUS_AGENT_TOKEN }}
+        run: |
+          if [[ -n "$AGENT_URL" && -n "$AGENT_TOKEN" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Dispatch one development task to configured agent service
-        if: ${{ secrets.AUTONOMOUS_AGENT_URL != '' && secrets.AUTONOMOUS_AGENT_TOKEN != '' }}
+        if: ${{ steps.agent-config.outputs.configured == 'true' }}
         env:
           AGENT_URL: ${{ secrets.AUTONOMOUS_AGENT_URL }}
           AGENT_TOKEN: ${{ secrets.AUTONOMOUS_AGENT_TOKEN }}
@@ -79,7 +92,7 @@ jobs:
           echo 'Agent service accepted the request. Review its response and resulting PR; this workflow does not auto-merge.' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Explain missing agent configuration
-        if: ${{ secrets.AUTONOMOUS_AGENT_URL == '' || secrets.AUTONOMOUS_AGENT_TOKEN == '' }}
+        if: ${{ steps.agent-config.outputs.configured != 'true' }}
         shell: bash
         run: |
           {

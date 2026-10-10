@@ -9,9 +9,11 @@ A framework-agnostic QA automation control plane. The current MVP discovers a lo
 - Normalized test metadata and adapter capability reporting
 - React/TypeScript Test Explorer with search and test details
 - Explicitly authorized local pytest execution, timeout, and normalized JUnit results
+- Local SQLite run history with minimized normalized summaries
+- Deterministic failure categories displayed alongside failed results
 - Backend pytest and frontend build workflows in GitHub Actions
 
-The MVP does **not** yet include background runs/cancellation, persistent run history or evidence storage, remote repository connections, additional execution adapters, deterministic failure analysis, or AI analysis. See [Implementation Status](IMPLEMENTATION_STATUS.md) and [Changelog](CHANGELOG.md).
+The MVP does **not** yet include background runs/cancellation, evidence artifact storage, remote repository connections, additional execution adapters, or AI analysis. See [Implementation Status](IMPLEMENTATION_STATUS.md) and [Changelog](CHANGELOG.md).
 
 ## Requirements
 
@@ -68,9 +70,12 @@ To point the frontend at another API URL, set `VITE_API_BASE_URL` before startin
 2. Select **Discover tests**.
 3. Select a discovered test to inspect its normalized metadata.
 4. To execute it, explicitly check the authorization box and choose **Run selected test**.
-5. Review the normalized status and failure message.
+5. Review the normalized status, failure category, and message.
+6. View recent runs in the Local Run History section.
 
 **Execution safety:** running a test may execute arbitrary code from that project. Only authorize projects you trust. The authorization checkbox is not an OS-level sandbox. Keep the API bound to localhost unless you have implemented appropriate network access controls and authentication.
+
+**Local history:** compact execution summaries are stored in SQLite at `~/.ai-automation-command-center/history.sqlite3` by default. Set `AAC_RUN_DB_PATH` to use another location. Raw stdout/stderr and raw failure messages are not persisted; the database is not encrypted and has no retention policy yet. See [Execution Contract](docs/EXECUTION_CONTRACT.md).
 
 ## Validate changes
 

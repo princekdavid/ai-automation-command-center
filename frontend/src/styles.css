@@ -14,3 +14,18 @@
 .failure-analysis{padding:8px 10px;border-left:3px solid #b45309;background:#fff7ed;color:#7c2d12!important;border-radius:0 6px 6px 0}
 .failure-analysis strong{text-transform:capitalize}
 .failure-analysis small{display:block;margin:5px 0 0;color:#9a3412}
+
+.run-history{margin-top:18px}
+.history-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.history-heading h2{margin:0}
+.history-heading .muted{margin-top:6px;max-width:640px}
+.history-list{display:grid;gap:10px}
+.history-item{border:1px solid #e3e8ef;border-radius:10px;padding:12px;display:grid;gap:8px;min-width:0}
+.history-main,.history-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.history-main strong{text-transform:uppercase;font-size:12px}
+.history-main span,.history-meta span{font-size:12px;color:#526178}
+.history-main small,.history-meta code,.history-path{font-size:11px;color:#778399}
+.history-meta{justify-content:space-between}
+.history-categories{display:flex;gap:6px;flex-wrap:wrap}
+.history-categories span{font-size:11px;text-transform:capitalize;background:#fff7ed;color:#9a3412;padding:4px 7px;border-radius:6px}
+.history-path{overflow-wrap:anywhere}

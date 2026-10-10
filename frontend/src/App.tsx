@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Test = { id:string; name:string; source_path:string; framework:string; runner:string|null; suite:string|null; tags:string[]; metadata:Record<string,unknown> };
 type Capability = { id:string; name:string; supported:boolean; description:string };
-type ExecutionResult = { request_id:string; status:string; results:{test_id:string;outcome:string;duration_seconds:number|null;message:string|null}[]; error:string|null };
+type ExecutionResult = { request_id:string; history_saved?:boolean; status:string; results:{test_id:string;outcome:string;duration_seconds:number|null;message:string|null}[]; error:string|null };
 type FailureAnalysis = { test_id:string; category:string; summary:string; matched_rule:string|null };
+type HistoryExecution = { request_id:string; project_path:string; runner:string; status:string; created_at:string; results:{test_id:string;outcome:string;duration_seconds:number|null;failure_category:string;failure_summary:string;matched_rule:string|null;evidence_count:number}[] };
 
 const API = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000";
 
@@ -19,6 +20,21 @@ function App(){
   const [executionLoading,setExecutionLoading]=useState(false);
   const [executionResult,setExecutionResult]=useState<ExecutionResult|null>(null);
   const [failureAnalyses,setFailureAnalyses]=useState<FailureAnalysis[]>([]);
+  const [runHistory,setRunHistory]=useState<HistoryExecution[]>([]);
+
+  async function loadHistory(){
+    try{
+      const response=await fetch(API+"/api/v1/executions?limit=10");
+      if(response.ok){
+        const data=await response.json();
+        setRunHistory(data.executions as HistoryExecution[]);
+      }
+    }catch{
+      // History is optional for discovery; show it when the API is reachable.
+    }
+  }
+
+  useEffect(()=>{void loadHistory();},[]);
 
   async function discover(){
     setLoading(true); setError(""); setSelected(null); setAuthorizeExecution(false); setExecutionResult(null); setFailureAnalyses([]);
@@ -55,6 +71,7 @@ function App(){
       if(!response.ok) throw new Error(result.detail??"Execution request failed");
       const normalized=result as ExecutionResult;
       setExecutionResult(normalized);
+      await loadHistory();
       if(normalized.results.some(item=>item.outcome==="failed"||item.outcome==="error")){
         try{
           const analysisResponse=await fetch(API+"/api/v1/analysis/failures",{
@@ -88,9 +105,10 @@ function App(){
       <section className="metrics"><div className="metric"><span>Tests</span><strong>{tests.length}</strong></div><div className="metric"><span>Visible</span><strong>{filtered.length}</strong></div><div className="metric"><span>Runner</span><strong>{tests[0]?.runner??"—"}</strong></div><div className="metric"><span>Capabilities</span><strong>{capabilities.filter(c=>c.supported).length}/{capabilities.length}</strong></div></section>
       <section className="workspace card">
         <div className="explorer"><div className="toolbar"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search tests, files, tags…" /><span>{filtered.length} results</span></div><div className="tree">{Object.keys(groups).length===0?<div className="empty">No discovered tests. Connect a project and run discovery.</div>:Object.entries(groups).map(([file,items])=><div className="group" key={file}><div className="file">▾ <span>{file}</span><b>{items.length}</b></div>{items.map(t=><button className={selected?.id===t.id?"test selected":"test"} onClick={()=>{setSelected(t);setAuthorizeExecution(false);setExecutionResult(null);setFailureAnalyses([]);}} key={t.id}><span>✓</span><span>{t.name}</span>{t.tags.length>0&&<em>{t.tags.join(", ")}</em>}</button>)}</div>)}</div></div>
-        <div className="detail">{selected?<><p className="eyebrow">TEST DETAIL</p><h2>{selected.name}</h2><div className="chips"><span>{selected.runner}</span><span>{selected.framework}</span><span>{selected.metadata.kind as string}</span></div><dl><dt>Source</dt><dd>{selected.source_path}:{String(selected.metadata.line??"")}</dd><dt>Suite</dt><dd>{selected.suite??"—"}</dd><dt>Tags</dt><dd>{selected.tags.length?selected.tags.join(", "):"—"}</dd><dt>Test ID</dt><dd>{selected.id}</dd></dl><div className="execution-controls"><label className="authorization"><input type="checkbox" checked={authorizeExecution} onChange={e=>setAuthorizeExecution(e.target.checked)} /> I authorize running this test; it may cause side effects in the selected project.</label><button onClick={executeSelected} disabled={!authorizeExecution||executionLoading||!selected.runner}>{executionLoading?"Running…":"Run selected test"}</button><small>Local pytest only · 300-second timeout · review the project before authorizing execution.</small>{executionResult&&<div className="execution-result"><strong>Run status: {executionResult.status}</strong>{executionResult.error&&<p>{executionResult.error}</p>}{executionResult.results.map(result=>{const analysis=failureAnalyses.find(item=>item.test_id===result.test_id);return <div className="result-row" key={result.test_id}><span>{result.outcome}</span>{result.duration_seconds!==null&&<small>{result.duration_seconds.toFixed(2)}s</small>}{result.message&&<p>{result.message}</p>}{analysis&&<p className="failure-analysis"><strong>{analysis.category.replaceAll("_"," ")}</strong> — {analysis.summary}{analysis.matched_rule&&<small> Rule: {analysis.matched_rule}</small>}</p>}</div>})}</div>}</div></>:<div className="empty detail-empty">Select a test to inspect its normalized metadata.</div>}</div>
+        <div className="detail">{selected?<><p className="eyebrow">TEST DETAIL</p><h2>{selected.name}</h2><div className="chips"><span>{selected.runner}</span><span>{selected.framework}</span><span>{selected.metadata.kind as string}</span></div><dl><dt>Source</dt><dd>{selected.source_path}:{String(selected.metadata.line??"")}</dd><dt>Suite</dt><dd>{selected.suite??"—"}</dd><dt>Tags</dt><dd>{selected.tags.length?selected.tags.join(", "):"—"}</dd><dt>Test ID</dt><dd>{selected.id}</dd></dl><div className="execution-controls"><label className="authorization"><input type="checkbox" checked={authorizeExecution} onChange={e=>setAuthorizeExecution(e.target.checked)} /> I authorize running this test; it may cause side effects in the selected project.</label><button onClick={executeSelected} disabled={!authorizeExecution||executionLoading||!selected.runner}>{executionLoading?"Running…":"Run selected test"}</button><small>Local pytest only · 300-second timeout · review the project before authorizing execution.</small>{executionResult&&<div className="execution-result"><strong>Run status: {executionResult.status}</strong>{executionResult.history_saved===false&&<p>Run completed, but local history could not be saved.</p>}{executionResult.error&&<p>{executionResult.error}</p>}{executionResult.results.map(result=>{const analysis=failureAnalyses.find(item=>item.test_id===result.test_id);return <div className="result-row" key={result.test_id}><span>{result.outcome}</span>{result.duration_seconds!==null&&<small>{result.duration_seconds.toFixed(2)}s</small>}{result.message&&<p>{result.message}</p>}{analysis&&<p className="failure-analysis"><strong>{analysis.category.replaceAll("_"," ")}</strong> — {analysis.summary}{analysis.matched_rule&&<small> Rule: {analysis.matched_rule}</small>}</p>}</div>})}</div>}</div></>:<div className="empty detail-empty">Select a test to inspect its normalized metadata.</div>}</div>
       </section>
       <section className="card capabilities"><div><p className="eyebrow">ADAPTER CAPABILITIES</p><h2>What this project supports</h2></div><div className="cap-grid">{capabilities.map(c=><div className="cap" key={c.id}><span className={c.supported?"supported":"unsupported"}>{c.supported?"Supported":"Unsupported"}</span><strong>{c.name}</strong><small>{c.description}</small></div>)}</div></section>
+      <section className="card run-history"><div className="history-heading"><div><p className="eyebrow">LOCAL RUN HISTORY</p><h2>Recent executions</h2><p className="muted">Only normalized summaries are saved; raw logs and failure messages are not stored.</p></div><button onClick={loadHistory}>Refresh</button></div>{runHistory.length===0?<div className="empty">No saved runs yet.</div>:<div className="history-list">{runHistory.map(run=><div className="history-item" key={run.request_id}><div className="history-main"><strong>{run.status}</strong><span>{run.runner}</span><small>{new Date(run.created_at).toLocaleString()}</small></div><div className="history-meta"><span>{run.results.length} test result{run.results.length===1?"":"s"}</span><code>{run.request_id.slice(0,8)}</code></div>{run.results.some(item=>item.failure_category!=="not_applicable")&&<div className="history-categories">{run.results.filter(item=>item.failure_category!=="not_applicable").map(item=><span key={item.test_id}>{item.failure_category.replaceAll("_"," ")}</span>)}</div>}<small className="history-path">{run.project_path}</small></div>)}</div>}</section>
     </main>
   </div>
 }

@@ -77,3 +77,21 @@ def test_discovery_does_not_follow_symlinks_outside_project(tmp_path: Path) -> N
 
     assert not any(path.startswith("linked-tests") for path in dna.test_paths)
     assert not any("external" in path for path in dna.config_files)
+
+
+
+def test_framework_detection_ignores_generated_dependency_copies(tmp_path: Path) -> None:
+    project = tmp_path
+    (project / "pyproject.toml").write_text(
+        "[project]\\ndependencies = ['pytest']\\n",
+        encoding="utf-8",
+    )
+    (project / "tests").mkdir()
+    copied_package = project / "node_modules" / "vendor"
+    copied_package.mkdir(parents=True)
+    (copied_package / "bundle.js").write_text("const playwright = true;", encoding="utf-8")
+
+    dna = DiscoveryService().discover(str(project))
+
+    assert dna.test_runner == "pytest"
+    assert dna.ui_framework is None

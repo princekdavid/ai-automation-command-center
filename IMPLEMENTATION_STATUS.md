@@ -23,11 +23,12 @@ Last updated: 2026-10-11
 - [x] Backend CI passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`
 - [x] Frontend build passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`
 - [x] Deterministic rule-based failure classification API and UI display added on this follow-up branch
-- [ ] Fresh backend/frontend CI for this failure-analysis branch
+- [x] Backend tests passed on failure-analysis commit `1394883aecbfa006d3e9c3e044abc75572049928`
+- [x] Frontend build passed on the same failure-analysis commit
 - [ ] Integration of the cumulative feature stack into main
 - [ ] Background run lifecycle, cancellation, and run history
 - [ ] Persistent evidence storage
-- [x] Initial deterministic failure categorization; expand rule coverage and validate against real-world fixtures
+- [x] Initial deterministic failure categorization with rule tests; expand coverage against representative real-world fixtures
 - [ ] Additional framework adapters
 - [ ] AI analysis
 
@@ -44,7 +45,9 @@ Discovery skips common generated/virtual-environment directories and symlinks, c
 - Backend tests passed on the reconciled code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634577).
 - Frontend build passed on the same code commit: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634579).
 - The later commit `90876b86ad1630e5c4f2cc95d4f4458c228c252b` changes README documentation only; no backend/frontend source changed after the validated code commit for PR #9.
-- The failure-analysis follow-up branch introduces new backend and frontend code after that validated commit. Its own CI must pass before the changes are treated as validated.
+- The failure-analysis follow-up commit `1394883aecbfa006d3e9c3e044abc75572049928` passed backend tests: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897550).
+- The same commit passed the frontend build: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897545).
+- An earlier classifier test correctly exposed an over-broad `expected ` keyword; the rule was narrowed and the full backend suite passed on the newer commit.
 
 ## Known Limitations
 
@@ -58,12 +61,11 @@ Discovery skips common generated/virtual-environment directories and symlinks, c
 
 ## Next Steps
 
-1. Run backend tests and frontend build for the deterministic failure-analysis branch and resolve any failures.
-2. Review the failure categories against representative fixture messages; retain unknown when evidence is weak.
-3. Integrate PR #9 before this stacked follow-up.
-4. Add background run records, cancellation, and persistent history before expanding to bulk execution.
-5. Add durable evidence storage.
-6. Add another adapter only after the normalized contracts stabilize.
+1. Review deterministic categories against representative fixture messages; retain unknown when evidence is weak.
+2. Integrate PR #9 before this stacked follow-up.
+3. Add background run records, cancellation, and persistent history before expanding to bulk execution.
+4. Add durable evidence storage.
+5. Add another adapter only after the normalized contracts stabilize.
 
 ## Tracking Rule
 

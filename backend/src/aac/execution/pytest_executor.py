@@ -41,10 +41,10 @@ class PytestExecutor:
                 (
                     candidate for candidate in cases
                     if candidate.attrib.get("name") == item.name
+                    and Path(item.source_path).stem in candidate.attrib.get("classname", "").split(".")
                     and (
                         item.metadata.get("kind") != "method"
-                        or candidate.attrib.get("classname", "").endswith(f".{item.suite}")
-                        or candidate.attrib.get("classname", "") == item.suite
+                        or candidate.attrib.get("classname", "").split(".")[-1] == item.suite
                     )
                 ),
                 None,

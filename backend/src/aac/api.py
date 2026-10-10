@@ -1,4 +1,7 @@
+import os
+
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from aac.discovery.service import DiscoveryService
 from aac.discovery.test_service import TestDiscoveryService
@@ -6,6 +9,22 @@ from aac.execution.contracts import ExecutionMode, ExecutionPolicy, ExecutionReq
 from aac.execution.service import ExecutionService
 
 app = FastAPI(title="AI Automation Command Center", version="0.1.0")
+# Local Vite development origins only by default. Deployments must configure explicit trusted origins.
+cors_origins = [
+    origin.strip()
+    for origin in os.getenv(
+        "AAC_CORS_ORIGINS",
+        "http://localhost:5173,http://127.0.0.1:5173",
+    ).split(",")
+    if origin.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=cors_origins,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
 discovery = DiscoveryService()
 test_discovery = TestDiscoveryService(discovery=discovery)
 execution_service = ExecutionService(discovery_service=discovery)

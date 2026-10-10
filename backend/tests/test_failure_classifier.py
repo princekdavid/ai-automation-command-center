@@ -1,3 +1,5 @@
+import pytest
+
 from aac.analysis.failure_classifier import FailureCategory, classify_failure
 
 
@@ -34,3 +36,19 @@ def test_passed_test_is_not_classified_as_failure() -> None:
     result = classify_failure("test_ok", "passed", "assertionerror in fixture log")
 
     assert result.category is FailureCategory.NOT_APPLICABLE
+
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_category"),
+    [
+        ("HTTP 401 unauthorized", FailureCategory.AUTHENTICATION),
+        ("Connection refused by host", FailureCategory.NETWORK_ERROR),
+        ("ModuleNotFoundError: No module named 'fixture_package'", FailureCategory.TEST_SETUP),
+    ],
+)
+def test_authentication_network_and_setup_rules(message, expected_category) -> None:
+    result = classify_failure("test_case", "error", message)
+
+    assert result.category is expected_category
+    assert result.matched_rule is not None

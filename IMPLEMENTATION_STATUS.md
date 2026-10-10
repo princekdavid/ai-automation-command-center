@@ -17,28 +17,36 @@ The following work is **proposed in open PRs** and is not yet confirmed as deliv
 
 | PR | Scope | Base branch | Current tracking note |
 |---|---|---|---|
-| [#2](https://github.com/princekdavid/ai-automation-command-center/pull/2) | FastAPI foundation and read-only framework discovery | `main` | Open; PR description says runtime CI was not established |
-| [#3](https://github.com/princekdavid/ai-automation-command-center/pull/3) | Adapter contract and normalized test discovery | `main` | Open; currently reports mergeability issue; inspect conflict/dependency before merge |
-| [#4](https://github.com/princekdavid/ai-automation-command-center/pull/4) | Discovery hardening and Test Explorer boundary docs | `main` | Open; validation not confirmed |
-| [#5](https://github.com/princekdavid/ai-automation-command-center/pull/5) | Adapter capabilities and backend CI workflow | `main` | Open; PR description says first workflow run needs verification |
-| [#6](https://github.com/princekdavid/ai-automation-command-center/pull/6) | Test Explorer UI and controlled local pytest execution | `feat/adapter-capabilities-ci-test-explorer` | Open; stacked on PR #5; latest CI not confirmed |
-| [#7](https://github.com/princekdavid/ai-automation-command-center/pull/7) | Five-minute status scheduler and task ledger | `main` | Open; status-only unless a separate agent service is configured; not needed for manual development here |
+| [#2](https://github.com/princekdavid/ai-automation-command-center/pull/2) | FastAPI foundation and read-only framework discovery | `main` | Open; no check runs found for inspected head commit |
+| [#3](https://github.com/princekdavid/ai-automation-command-center/pull/3) | Adapter contract and normalized test discovery | `main` | Open; reported not mergeable at inspection; no check runs found for inspected head commit |
+| [#4](https://github.com/princekdavid/ai-automation-command-center/pull/4) | Discovery hardening and Test Explorer boundary docs | `main` | Open; no check runs found for inspected head commit |
+| [#5](https://github.com/princekdavid/ai-automation-command-center/pull/5) | Adapter capabilities and backend CI | `main` | Open; backend test check succeeded on inspected head commit |
+| [#6](https://github.com/princekdavid/ai-automation-command-center/pull/6) | Test Explorer UI and controlled local pytest execution | `feat/adapter-capabilities-ci-test-explorer` | Open; previous checked head had frontend build and backend test failures; fixes committed, latest checks not yet confirmed |
+| [#7](https://github.com/princekdavid/ai-automation-command-center/pull/7) | Five-minute status scheduler and task ledger | `main` | Open; scheduler check succeeded in status-only mode; no coding agent is provisioned |
+| [#8](https://github.com/princekdavid/ai-automation-command-center/pull/8) | Reconcile implementation status | `main` | Open; documentation-only; mergeability/check status still needs confirmation |
 
-## Verified repository state at this update
+## CI evidence inspected on 2026-10-11
 
-- PRs #2–#7 were found open during the status reconciliation.
-- PR #6 targets the feature branch used by PR #5, so its integration depends on that branch being kept coherent.
-- PR #3 was reported as not mergeable at the time of inspection; investigate the exact GitHub conflict/mergeability reason before attempting to merge.
-- Successful CI for the implementation PRs has **not** been established by this status review. Treat test status as unverified until actual workflow results are inspected.
-- The five-minute workflow does not provide a hosted coding model. We will continue implementation interactively in ChatGPT without a paid coding-agent service.
+- PR #5: backend `test` check completed successfully on commit `cff2d46b28075c40bc4c0353dfb328359cedb730`.
+- PR #6, prior head `8883c0d4fc9477ad3f012865538416a0f658c8be`: frontend `build` failed because React/React DOM type declarations and Vite client types were missing. Backend tests reported **13 passed, 2 failed**: one API test referenced an undefined `client`; another unsupported-runner case raised an uncaught adapter `LookupError`.
+- PR #6 follow-up fixes were committed to `feat/execution-contracts`: add React type dependencies and Vite client declarations, instantiate `TestClient(app)` in the API test, and reject unsupported runners deterministically. The new head is `9fd283c94b64df74edbfd781b30b9ebef732d590`. No check runs were visible for this new head at the time of this update, so these fixes are **not yet validated by CI**.
+- PR #7: `inspect-and-dispatch` completed successfully on its inspected head. This confirms the workflow's status-only path, not autonomous coding.
+- PRs #2–#4 and #8: no check runs were found for the inspected head commits. Absence of check runs is not equivalent to a passing test suite.
+
+## Current integration concerns
+
+- PR #6 targets the feature branch used by PR #5, so integration depends on that base branch remaining coherent.
+- PR #3 was reported as not mergeable at inspection. Inspect the exact GitHub conflict/mergeability reason before attempting to merge.
+- PR #8 was reported as not mergeable immediately after creation; investigate before merging rather than assuming it is safe.
+- Do not mark the MVP implementation complete until branch dependencies, CI, and review are resolved.
 
 ## Next actions — do these in order
 
-1. Inspect PR #2–#6 diffs and their current check runs; identify duplicated changes, actual branch dependencies, conflicts, and missing tests.
-2. Establish a single coherent merge order. Do not merge dependent PRs out of order.
-3. Run/verify backend tests and frontend build in GitHub Actions; fix failures before advancing.
-4. Update the status only from actual check results and merged code.
-5. Continue the Test Explorer execution lifecycle, results/evidence, and deterministic failure analysis after the current vertical slice is integrated and green.
+1. Verify the new PR #6 head's CI. If GitHub did not trigger checks for the API-created commits, run the workflow through GitHub Actions or make a normal follow-up commit.
+2. Resolve PR #3's mergeability issue and inspect the dependency/order of PRs #2–#6.
+3. Establish a coherent merge order and avoid merging dependent PRs out of order.
+4. Fix failures before advancing; record evidence from actual check runs.
+5. Continue Test Explorer execution lifecycle, results/evidence, and deterministic failure analysis only after the current vertical slice is integrated and green.
 
 ## Safety and completion rules
 

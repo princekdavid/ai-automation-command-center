@@ -1,0 +1,108 @@
+name: Five-minute development loop
+
+on:
+  schedule:
+    # GitHub Actions schedules are best-effort; starts may be delayed.
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/autonomous-development-loop.yml"
+      - "AUTONOMOUS_TASKS.md"
+      - "docs/AUTONOMOUS_DEVELOPMENT_LOOP.md"
+
+permissions:
+  contents: read
+  pull-requests: read
+  actions: read
+
+concurrency:
+  group: autonomous-development-loop
+  cancel-in-progress: false
+
+jobs:
+  inspect-and-dispatch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout default branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+
+      - name: Inspect repository state and test gates
+        id: inspect
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p .loop-output
+          gh pr list --repo "$REPO" --state open --json number,title,url,headRefName,baseRefName,isDraft,statusCheckRollup > .loop-output/open-prs.json
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          prs = json.loads(Path(".loop-output/open-prs.json").read_text())
+          summary = []
+          summary.append("## Five-minute development loop")
+          summary.append("")
+          summary.append(f"- Open pull requests inspected: **{len(prs)}**")
+          for pr in prs:
+              checks = pr.get("statusCheckRollup") or []
+              states = [c.get("conclusion") or c.get("state") or "pending" for c in checks]
+              green = bool(states) and all(s in ("SUCCESS", "success", "NEUTRAL", "neutral", "SKIPPED", "skipped") for s in states)
+              summary.append(f"- [#{pr['number']} {pr['title']}]({pr['url']}) — checks: {'green' if green else 'pending/failed/unknown'}")
+          Path(os.environ["GITHUB_STEP_SUMMARY"]).write_text("\n".join(summary) + "\n")
+          print(f"Inspected {len(prs)} open pull requests.")
+          PY
+
+      - name: Check agent configuration
+        id: agent-config
+        shell: bash
+        env:
+          AGENT_URL: ${{ secrets.AUTONOMOUS_AGENT_URL }}
+          AGENT_TOKEN: ${{ secrets.AUTONOMOUS_AGENT_TOKEN }}
+        run: |
+          if [[ -n "$AGENT_URL" && -n "$AGENT_TOKEN" ]]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Dispatch one development task to configured agent service
+        if: ${{ steps.agent-config.outputs.configured == 'true' && github.event_name != 'pull_request' }}
+        env:
+          AGENT_URL: ${{ secrets.AUTONOMOUS_AGENT_URL }}
+          AGENT_TOKEN: ${{ secrets.AUTONOMOUS_AGENT_TOKEN }}
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # The external agent must implement docs/AUTONOMOUS_DEVELOPMENT_LOOP.md.
+          # One request per run; the service is responsible for choosing one eligible task,
+          # creating a branch/PR (never pushing to the default branch), running tests,
+          # recording progress, and refusing unsafe or unconfigured actions.
+          curl --fail-with-body --silent --show-error \
+            --max-time 90 \
+            -X POST "${AGENT_URL%/}/v1/development-runs" \
+            -H "Authorization: Bearer $AGENT_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"repository\":\"$REPOSITORY\",\"default_branch\":\"$DEFAULT_BRANCH\",\"run_url\":\"$RUN_URL\",\"task_ledger_path\":\"AUTONOMOUS_TASKS.md\",\"max_tasks\":1,\"require_green_checks\":true,\"must_open_pull_request\":true,\"auto_merge\":false}" \
+            | tee .loop-output/agent-response.json
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "### Agent dispatch" >> "$GITHUB_STEP_SUMMARY"
+          echo 'Agent service accepted the request. Review its response and resulting PR; this workflow does not auto-merge.' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Explain missing agent configuration
+        if: ${{ steps.agent-config.outputs.configured != 'true' || github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+          {
+            echo ""
+            echo "### Autonomous coding is not configured"
+            echo "This run inspected repository/PR status only. No code was changed."
+            echo "Configure repository Actions secrets AUTONOMOUS_AGENT_URL and AUTONOMOUS_AGENT_TOKEN for a compatible agent service, as documented in docs/AUTONOMOUS_DEVELOPMENT_LOOP.md."
+          } >> "$GITHUB_STEP_SUMMARY"

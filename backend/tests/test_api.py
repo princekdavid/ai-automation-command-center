@@ -52,7 +52,7 @@ def test_test_discovery_endpoint(tmp_path) -> None:
 
 
 def test_execution_endpoint_requires_explicit_authorization(tmp_path):
-    response = client.post(
+    response = TestClient(app).post(
         "/api/v1/executions",
         json={
             "project_path": str(tmp_path),

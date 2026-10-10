@@ -5,6 +5,11 @@ on:
     # GitHub Actions schedules are best-effort; starts may be delayed.
     - cron: "*/5 * * * *"
   workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/autonomous-development-loop.yml"
+      - "AUTONOMOUS_TASKS.md"
+      - "docs/AUTONOMOUS_DEVELOPMENT_LOOP.md"
 
 permissions:
   contents: read
@@ -66,7 +71,7 @@ jobs:
           fi
 
       - name: Dispatch one development task to configured agent service
-        if: ${{ steps.agent-config.outputs.configured == 'true' }}
+        if: ${{ steps.agent-config.outputs.configured == 'true' && github.event_name != 'pull_request' }}
         env:
           AGENT_URL: ${{ secrets.AUTONOMOUS_AGENT_URL }}
           AGENT_TOKEN: ${{ secrets.AUTONOMOUS_AGENT_TOKEN }}
@@ -92,7 +97,7 @@ jobs:
           echo 'Agent service accepted the request. Review its response and resulting PR; this workflow does not auto-merge.' >> "$GITHUB_STEP_SUMMARY"
 
       - name: Explain missing agent configuration
-        if: ${{ steps.agent-config.outputs.configured != 'true' }}
+        if: ${{ steps.agent-config.outputs.configured != 'true' || github.event_name == 'pull_request' }}
         shell: bash
         run: |
           {

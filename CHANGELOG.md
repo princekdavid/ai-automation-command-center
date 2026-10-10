@@ -22,7 +22,7 @@ All notable project changes should be recorded here.
 - Running a test may execute arbitrary project code; explicit authorization is required.
 - No repository mutation, package installation, deployment, remote execution, retries, or self-healing is implemented.
 - Background lifecycle/cancellation and persistent evidence artifact storage remain pending. Local history stores normalized summaries only; the database is unencrypted and has no retention policy. Deterministic failure categorization is implemented but requires broader fixture validation.
-- Backend tests and frontend build passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`; see the Implementation Status for the exact workflow links.
+- Backend tests and frontend build passed on code commit `62d0fe7d63532d04da99714739b09c214a9dd01a`; see the Implementation Status for the exact workflow links.
 
 ## Previous Foundation
 - Product vision and non-goals

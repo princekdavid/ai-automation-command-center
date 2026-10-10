@@ -53,7 +53,8 @@ def test_test_discovery_endpoint(tmp_path) -> None:
 
 
 
-def test_execution_endpoint_requires_explicit_authorization(tmp_path):
+def test_execution_endpoint_requires_explicit_authorization(tmp_path, monkeypatch):
+    monkeypatch.setattr("aac.api.history_store", SQLiteExecutionHistoryStore(tmp_path / "history.sqlite3"))
     response = TestClient(app).post(
         "/api/v1/executions",
         json={

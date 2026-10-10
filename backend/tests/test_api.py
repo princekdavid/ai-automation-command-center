@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from aac.api import app
+from aac.execution.history import SQLiteExecutionHistoryStore
 
 
 def test_health() -> None:
@@ -106,3 +107,33 @@ def test_failure_analysis_endpoint_returns_deterministic_category() -> None:
     assert analyses[0]["category"] == "locator_not_found"
     assert analyses[0]["matched_rule"] == "locator not found"
     assert analyses[1]["category"] == "not_applicable"
+
+
+
+def test_execution_history_api_persists_and_retrieves_summary(tmp_path, monkeypatch) -> None:
+    store = SQLiteExecutionHistoryStore(tmp_path / "history.sqlite3")
+    monkeypatch.setattr("aac.api.history_store", store)
+    client = TestClient(app)
+
+    created = client.post(
+        "/api/v1/executions",
+        json={
+            "project_path": str(tmp_path),
+            "runner": "pytest",
+            "test_ids": ["pytest:missing"],
+        },
+    )
+
+    assert created.status_code == 200
+    body = created.json()
+    assert body["status"] == "rejected"
+    assert body["history_saved"] is True
+
+    listing = client.get("/api/v1/executions?limit=10")
+    assert listing.status_code == 200
+    assert listing.json()["count"] == 1
+    assert listing.json()["executions"][0]["request_id"] == body["request_id"]
+
+    detail = client.get(f"/api/v1/executions/{body['request_id']}")
+    assert detail.status_code == 200
+    assert detail.json()["status"] == "rejected"

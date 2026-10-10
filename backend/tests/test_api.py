@@ -79,3 +79,30 @@ def test_local_frontend_origin_is_allowed_by_cors() -> None:
 
     assert response.status_code == 200
     assert response.headers["access-control-allow-origin"] == "http://localhost:5173"
+
+
+
+def test_failure_analysis_endpoint_returns_deterministic_category() -> None:
+    response = TestClient(app).post(
+        "/api/v1/analysis/failures",
+        json={
+            "results": [
+                {
+                    "test_id": "pytest:failed",
+                    "outcome": "failed",
+                    "message": "Locator not found: #submit",
+                },
+                {
+                    "test_id": "pytest:passed",
+                    "outcome": "passed",
+                    "message": None,
+                },
+            ]
+        },
+    )
+
+    assert response.status_code == 200
+    analyses = response.json()["analyses"]
+    assert analyses[0]["category"] == "locator_not_found"
+    assert analyses[0]["matched_rule"] == "locator not found"
+    assert analyses[1]["category"] == "not_applicable"

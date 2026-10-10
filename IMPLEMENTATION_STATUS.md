@@ -1,74 +1,53 @@
 # Implementation Status
 
-Last updated: 2026-10-06
+Last updated: 2026-10-11
 
 ## Foundation
-- [x] Product vision defined
-- [x] MVP scope defined
-- [x] Dashboard modules defined
-- [x] Framework-agnostic architecture direction defined
-- [x] Skill architecture direction defined
-- [x] Repository foundation started
-- [x] Skill architecture documented
-- [x] Framework adapter contract documented
-- [x] Dashboard specification documented
-- [x] UI/UX principles documented
-- [x] Security model documented
-- [x] Agent rules documented
-- [x] Architecture decisions documented
-- [x] Changelog established
-- [x] Contribution rules documented
+- [x] Product vision, MVP scope, architecture, UI/UX principles, security model, agent rules, and contribution guidance documented
+- [x] Framework-neutral adapter and Test Explorer contracts documented
+- [x] Python/FastAPI backend skeleton and canonical Framework DNA/Capability models
+- [x] Read-only local project discovery and REST endpoint
+- [x] Adapter registry and reference pytest adapter
+- [x] Normalized discovered-test model and test discovery REST endpoint
+- [x] Adapter capability reporting
+- [x] Backend GitHub Actions workflow
+- [x] Pytest AST discovery regression coverage for module functions, class methods, and nested helper exclusions
+- [x] Initial generated-directory exclusions and symlink boundary safeguards for discovery
+- [ ] Re-run CI against the newest discovery hardening commits
+- [ ] Confirm all stacked PRs are integrated in dependency order
+- [ ] Test Explorer execution controls and run lifecycle
+- [ ] Persistent run history and evidence pipeline
+- [ ] Deterministic failure analysis
+- [ ] Additional framework adapters
+- [ ] AI analysis
 
-## Phase 1 — Discovery Foundation
-- [x] Initial implementation architecture documented
-- [x] Python/FastAPI backend skeleton created
-- [x] Canonical Framework DNA and Capability models created
-- [x] Read-only local project discovery service implemented
-- [x] Initial Python/pytest/Playwright/API detection implemented
-- [x] Discovery REST endpoint implemented
-- [x] Canonical adapter interface implemented
-- [x] Adapter registry implemented
-- [x] Reference pytest adapter implemented
-- [x] Normalized discovered-test model implemented
-- [x] Test discovery service implemented
-- [x] Test discovery REST endpoint implemented
-- [x] Unit/API tests added
-- [x] Test Explorer contract documented
-- [x] Explicit adapter capability reporting added
-- [x] Reproducible backend CI workflow added
-- [ ] CI workflow execution verified
-- [ ] Discovery hardening/exclusion policy formally validated
-- [ ] Additional framework adapters implemented
-- [ ] Dashboard implemented
-- [ ] Execution pipeline implemented
-- [ ] AI analysis implemented
+## Current Branch Scope
 
-## Current State
+This branch provides the discovery and adapter-capability foundation. The reference pytest adapter reports discovery as supported. Execution and result collection remain unsupported on this branch; the execution vertical slice is proposed separately in PR #6 and must be reconciled with this branch before integration.
 
-Phase 0 foundation is merged into main. Phase 1 now has explicit adapter capabilities and a reproducible GitHub Actions backend test workflow.
+Discovery now prunes common generated/virtual-environment directories, ignores hidden directories during recursive scanning, skips symlinked directories/files, checks resolved paths remain inside the project, handles inaccessible paths conservatively, and limits inspected file sizes and returned path lists. These are initial safeguards, not a complete sandbox.
 
-Adapters report supported and unsupported operations instead of allowing the dashboard to assume capabilities. The reference pytest adapter currently supports read-only test discovery; execution and result collection remain explicitly unsupported.
+## Validation Evidence
 
-The Test Explorer contract defines the UI/backend boundary. The UI consumes normalized tests and never parses framework-specific source itself.
+- Backend CI passed on commit `21f321e81f6392cbf73e41004862ce4152b7b1ce`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38090884794).
+- That successful run predates the discovery hardening and new regression tests committed on 2026-10-11. Those latest commits have not yet been validated by CI. Do not treat the earlier green run as validation of the current branch head.
+- Commits created through the connected GitHub integration may not trigger new Actions runs automatically. Re-run or trigger CI through GitHub before merging.
 
 ## Known Limitations
 
-- Detection is heuristic and intentionally conservative.
-- Dependency parsing is not yet package-manager aware.
-- Filesystem exclusion behavior has initial safeguards but still requires formal validation.
-- The pytest adapter needs richer support for markers, parametrization, fixtures, and other pytest metadata.
-- Only one reference adapter is currently implemented.
-- The current endpoint accepts a local filesystem path; secure remote repository connectors are not implemented yet.
-- No frontend has been implemented yet.
-- CI has been configured but its first run has not yet been verified.
+- Framework detection remains heuristic and does not comprehensively parse each package manager's dependency metadata.
+- Pytest markers, parametrization, fixtures, dynamic collection, and all pytest edge cases are not normalized.
+- Recursive discovery can still be expensive on large monorepos; limits and exclusions need broader performance testing.
+- Only pytest is implemented as a reference adapter.
+- The API accepts a local filesystem path. Secure remote repository connectors, authentication/authorization for a multi-user hosted deployment, and a full filesystem sandbox are not implemented.
+- CI workflow configuration is present, but latest changes require fresh validation.
 
-## Next Step
+## Recommended Integration Order
 
-1. Verify the backend CI workflow.
-2. Finish formal discovery exclusion validation.
-3. Build the first React/TypeScript Test Explorer vertical slice.
-4. Define execution request/result contracts without implementing execution prematurely.
-5. Add the first non-Pytest adapter only after the generic contracts remain stable.
+1. Review and integrate PR #2, then #3, then #4, then #5.
+2. Reconcile PR #6 against the integrated PR #5 changes; do not merge the stacked PR while GitHub reports a conflict.
+3. Verify backend tests and frontend build on the resulting cumulative commit.
+4. Continue with capability-gated execution controls, lifecycle/persistence, evidence, and failure classification.
 
 ## Tracking Rule
 

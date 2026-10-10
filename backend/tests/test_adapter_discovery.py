@@ -64,13 +64,13 @@ def test_adapter_can_handle_only_pytest() -> None:
 
 
 def test_adapter_discovers_test_methods_without_duplicate_or_nested_helpers(tmp_path: Path) -> None:
-    (tmp_path / "pyproject.toml").write_text("[project]\\ndependencies=['pytest']\\n", encoding="utf-8")
+    (tmp_path / "pyproject.toml").write_text("[project]\ndependencies=['pytest']\n", encoding="utf-8")
     tests = tmp_path / "tests"
     tests.mkdir()
     (tests / "test_collection.py").write_text(
-        "def test_module_function():\\n    def test_nested_helper():\\n        pass\\n"
-        "class TestLogin:\\n    def test_method(self):\\n        pass\\n"
-        "class Helper:\\n    def test_not_collected_by_pytest(self):\\n        pass\\n",
+        "def test_module_function():\n    def test_nested_helper():\n        pass\n"
+        "class TestLogin:\n    def test_method(self):\n        pass\n"
+        "class Helper:\n    def test_not_collected_by_pytest(self):\n        pass\n",
         encoding="utf-8",
     )
 

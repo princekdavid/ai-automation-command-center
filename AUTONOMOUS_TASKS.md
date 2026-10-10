@@ -23,7 +23,7 @@ complete without recorded test evidence.
 | ID | Status | Task | Acceptance criteria | Dependencies / evidence |
 |---|---|---|---|---|
 | LOOP-001 | in_progress | Reconcile PR stack, dependencies, and current CI state | Status accurately distinguishes main from open PRs; superseded branches are identified; no stale claims | PR #8 updated; PR #6 closed as superseded by PR #9; PR #9 is based on PR #5 branch. PR #2–#5 still require integration review. |
-| LOOP-002 | in_progress | Validate backend and frontend checks on current code | Repeatable backend tests/frontend build; exact checked commit recorded; no stale green claims | PR #9 backend and frontend checks passed on code commit 8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa. PR #10 adds code and is awaiting fresh checks. |
+| LOOP-002 | in_progress | Validate backend and frontend checks on current code | Repeatable backend tests/frontend build; exact checked commit recorded; no stale green claims | PR #9 backend and frontend checks passed on code commit 8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa. PR #10 backend and frontend checks passed on code commit 1394883aecbfa006d3e9c3e044abc75572049928. |
 | MVP-001 | in_progress | Complete Test Explorer execution controls and lifecycle | Explicit authorization, running/completed/failed states, timeouts, cancellation, and transition tests | PR #9 adds explicit single-test execution, timeout, and result display. Background jobs, cancellation, and run history remain pending. |
 | MVP-002 | in_progress | Add normalized execution results and evidence presentation | Results tied to an execution ID; summaries/evidence visible; tests for empty and failed results | PR #9 normalizes per-test JUnit results and displays outcomes. Persistent evidence storage and run history remain pending. |
 | MVP-003 | in_progress | Add deterministic failure categorization baseline | Transparent rules, explanations, tests, conservative unknown fallback; no unsupported AI claims | PR #10 adds keyword categories and a UI/API integration. This is an early slice ahead of persistent evidence; do not call MVP-003 complete until MVP-002's remaining acceptance criteria are satisfied. |
@@ -32,5 +32,5 @@ complete without recorded test evidence.
 ## Run log
 
 - 2026-10-11: PR #9's backend tests and frontend build passed on code commit 8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa. Later PR #9 commits changed docs only.
-- 2026-10-11: PR #10 opened with deterministic failure classification. Its backend and frontend checks must pass on the latest code before that slice is considered validated.
+- 2026-10-11: PR #10 backend tests and frontend build passed on code commit 1394883aecbfa006d3e9c3e044abc75572049928. An initial backend test exposed an over-broad keyword rule; it was narrowed and the suite passed on the follow-up commit.
 - The five-minute workflow passed in status-only mode; no autonomous coding agent service is provisioned.

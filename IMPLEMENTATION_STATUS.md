@@ -16,10 +16,13 @@ Last updated: 2026-10-11
 - [x] Explicit authorization and capability-gated execution orchestration
 - [x] Controlled local pytest execution with timeout and JUnit normalization
 - [x] Execution API and authorization tests
+- [x] Local Vite CORS preflight support with explicit configurable origins
+- [x] README local setup, validation, and execution safety instructions
 - [x] Explicit authorization checkbox and single-test execution control in Test Explorer
 - [x] Normalized execution status/result display in the UI
-- [ ] Fresh backend CI for the latest reconciled branch commits
-- [ ] Fresh frontend build for the latest reconciled branch commits
+- [x] Backend CI passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`
+- [x] Frontend build passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`
+- [ ] Re-run checks if any backend/frontend code changes after that validated commit
 - [ ] Integration of the cumulative feature stack into main
 - [ ] Background run lifecycle, cancellation, and run history
 - [ ] Persistent evidence storage
@@ -37,10 +40,9 @@ Discovery skips common generated/virtual-environment directories and symlinks, c
 
 ## Validation Evidence
 
-- The earlier PR #5 backend run passed on commit `21f321e81f6392cbf73e41004862ce4152b7b1ce`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38090884794).
-- That run predates later discovery hardening commits and does not validate this reconciled branch.
-- PR #6 backend and frontend checks passed on earlier commit `9fd283c94b64df74edbfd781b30b9ebef732d590`: [backend](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38090570672), [frontend](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38090570571).
-- Those checks also predate the latest executor/UI changes. No fresh check runs were available for the latest commits when this status was updated. Treat latest validation as pending.
+- Backend tests passed on the reconciled code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634577).
+- Frontend build passed on the same code commit: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634579).
+- The later commit `90876b86ad1630e5c4f2cc95d4f4458c228c252b` changes README documentation only; no backend/frontend source changed after the validated code commit.
 
 ## Known Limitations
 

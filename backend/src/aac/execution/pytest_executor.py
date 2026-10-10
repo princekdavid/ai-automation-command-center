@@ -37,8 +37,18 @@ class PytestExecutor:
         cases = list(root.iter("testcase")); results=[]
         for item in selected:
             if not item: continue
-            node_name = f"{item.suite}::{item.name}" if item.metadata.get("kind") == "method" else item.name
-            case = next((c for c in cases if c.attrib.get("name") == node_name), None)
+            case = next(
+                (
+                    candidate for candidate in cases
+                    if candidate.attrib.get("name") == item.name
+                    and (
+                        item.metadata.get("kind") != "method"
+                        or candidate.attrib.get("classname", "").endswith(f".{item.suite}")
+                        or candidate.attrib.get("classname", "") == item.suite
+                    )
+                ),
+                None,
+            )
             if case is None: outcome, message = TestOutcome.ERROR, "Test result was not found in report"
             elif case.find("failure") is not None or case.find("error") is not None:
                 node = case.find("failure")

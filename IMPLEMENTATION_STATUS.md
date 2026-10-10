@@ -18,7 +18,7 @@ The following work is **proposed in open PRs** and is not yet confirmed as deliv
 | PR | Scope | Base branch | Current tracking note |
 |---|---|---|---|
 | [#2](https://github.com/princekdavid/ai-automation-command-center/pull/2) | FastAPI foundation and read-only framework discovery | `main` | Open; no check runs found for inspected head commit |
-| [#3](https://github.com/princekdavid/ai-automation-command-center/pull/3) | Adapter contract and normalized test discovery | `main` | Open; reported not mergeable at inspection; no check runs found for inspected head commit |
+| [#3](https://github.com/princekdavid/ai-automation-command-center/pull/3) | Adapter contract and normalized test discovery | `main` | Open; mergeability currently clean; no check runs found for inspected head commit |
 | [#4](https://github.com/princekdavid/ai-automation-command-center/pull/4) | Discovery hardening and Test Explorer boundary docs | `main` | Open; no check runs found for inspected head commit |
 | [#5](https://github.com/princekdavid/ai-automation-command-center/pull/5) | Adapter capabilities and backend CI | `main` | Open; backend test check succeeded on inspected head commit |
 | [#6](https://github.com/princekdavid/ai-automation-command-center/pull/6) | Test Explorer UI and controlled local pytest execution | `feat/adapter-capabilities-ci-test-explorer` | Open; previous checked head failed frontend build and backend tests; follow-up fixes are now green on latest inspected head |
@@ -36,15 +36,15 @@ The following work is **proposed in open PRs** and is not yet confirmed as deliv
 ## Current integration concerns
 
 - PR #6 targets the feature branch used by PR #5, so integration depends on that base branch remaining coherent.
-- PR #3 was reported as not mergeable at inspection. Inspect the exact GitHub conflict/mergeability reason before attempting to merge.
+- PR #3 currently reports clean mergeability. PRs #2–#5 change many of the same files and are cumulative; review/merge in order #2 → #3 → #4 → #5, checking each updated diff after the previous PR merges.
 - PR #8's initial connector snapshot reported non-mergeable, but the GitHub pull-request API subsequently reported `mergeable=true` and `mergeable_state=clean`; still review before merging.
 - Do not mark the MVP implementation complete until branch dependencies, CI, and review are resolved.
 
 ## Next actions — do these in order
 
 1. Review the now-green PR #6 changes and confirm the PR #5 → PR #6 branch dependency.
-2. Resolve PR #3's mergeability issue and inspect the dependency/order of PRs #2–#6.
-3. Establish a coherent merge order and avoid merging dependent PRs out of order.
+2. Review the cumulative PRs #2–#5 in order and inspect each diff after the previous PR is merged.
+3. Keep PR #6 stacked on PR #5; merge it only after its base and green checks are confirmed.
 4. Continue Test Explorer execution lifecycle, results/evidence, and deterministic failure analysis after the current vertical slice is integrated.
 
 ## Safety and completion rules

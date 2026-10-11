@@ -66,3 +66,81 @@ def test_history_lists_recent_runs_with_limit(tmp_path) -> None:
 
     assert len(records) == 1
     assert records[0]["request_id"] in {"run-1", "run-2"}
+
+
+
+def test_history_persists_safe_artifact_references_and_updates_existing_rows(tmp_path) -> None:
+    store = SQLiteExecutionHistoryStore(tmp_path / "history.sqlite3")
+    request = ExecutionRequest(
+        request_id="run-with-artifact",
+        mode=ExecutionMode.SINGLE,
+        target=ExecutionTarget(["test-1"], "/workspace/project", "pytest"),
+    )
+    result = ExecutionResult(
+        request_id="run-with-artifact",
+        status=ExecutionStatus.PASSED,
+        metadata={
+            "artifacts": [{
+                "artifact_id": "opaque-artifact-id",
+                "kind": "junit",
+                "byte_size": 123,
+                "sha256": "b" * 64,
+                "created_at": "2026-10-11T10:00:00+00:00",
+                "media_type": "application/xml",
+                "storage_key": "/private/path/results.xml",
+                "execution_id": "run-with-artifact",
+            }]
+        },
+    )
+
+    store.save(request, result)
+    record = store.get("run-with-artifact")
+
+    assert record is not None
+    assert record["artifacts"] == [{
+        "artifact_id": "opaque-artifact-id",
+        "kind": "junit",
+        "byte_size": 123,
+        "sha256": "b" * 64,
+        "created_at": "2026-10-11T10:00:00+00:00",
+        "media_type": "application/xml",
+    }]
+    assert "/private/path" not in json.dumps(record)
+    assert store.list_recent()[0]["artifacts"] == record["artifacts"]
+
+    store.save(request, ExecutionResult("run-with-artifact", ExecutionStatus.FAILED))
+    updated = store.get("run-with-artifact")
+    assert updated is not None
+    assert updated["artifacts"] == []
+
+
+def test_history_migrates_existing_schema_with_no_artifact_column(tmp_path) -> None:
+    import sqlite3
+
+    database = tmp_path / "legacy-history.sqlite3"
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            """CREATE TABLE execution_history (
+                request_id TEXT PRIMARY KEY,
+                project_path TEXT NOT NULL,
+                runner TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                results_json TEXT NOT NULL
+            )"""
+        )
+        connection.execute(
+            """INSERT INTO execution_history
+            (request_id, project_path, runner, status, created_at, results_json)
+            VALUES ('legacy-run', '/workspace/project', 'pytest', 'passed',
+                    '2026-10-10T10:00:00+00:00', '[]')"""
+        )
+
+    store = SQLiteExecutionHistoryStore(database)
+
+    record = store.get("legacy-run")
+
+    assert record is not None
+    assert record["artifacts"] == []

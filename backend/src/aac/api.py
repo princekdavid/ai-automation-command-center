@@ -1,4 +1,5 @@
 import os
+from typing import Literal
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -7,6 +8,7 @@ from aac.discovery.service import DiscoveryService
 from aac.discovery.test_service import TestDiscoveryService
 from aac.execution.contracts import ExecutionMode, ExecutionPolicy, ExecutionRequest, ExecutionTarget
 from aac.execution.service import ExecutionService
+from aac.analysis.failure_classifier import classify_failure
 
 app = FastAPI(title="AI Automation Command Center", version="0.1.0")
 # Local Vite development origins only by default. Deployments must configure explicit trusted origins.
@@ -38,6 +40,14 @@ class ExecuteRequest(BaseModel):
     test_ids: list[str] = Field(min_length=1)
     authorize_execution: bool = False
     timeout_seconds: int = Field(default=300, ge=1, le=3600)
+
+class FailureInput(BaseModel):
+    test_id: str
+    outcome: Literal["passed", "failed", "error", "skipped", "xfailed", "xpassed"]
+    message: str | None = None
+
+class FailureAnalysisRequest(BaseModel):
+    results: list[FailureInput] = Field(min_length=1)
 
 def _test_to_dict(item) -> dict:
     return {"id": item.id, "name": item.name, "source_path": item.source_path, "framework": item.framework, "runner": item.runner, "suite": item.suite, "tags": item.tags, "metadata": item.metadata}
@@ -107,6 +117,25 @@ def execute(request: ExecuteRequest) -> dict:
         "completed_at": result.completed_at,
         "error": result.error,
         "metadata": result.metadata,
+    }
+
+
+@app.post("/api/v1/analysis/failures")
+def analyze_failures(request: FailureAnalysisRequest) -> dict:
+    analyses = [
+        classify_failure(item.test_id, item.outcome, item.message)
+        for item in request.results
+    ]
+    return {
+        "analyses": [
+            {
+                "test_id": item.test_id,
+                "category": item.category.value,
+                "summary": item.summary,
+                "matched_rule": item.matched_rule,
+            }
+            for item in analyses
+        ]
     }
 
 

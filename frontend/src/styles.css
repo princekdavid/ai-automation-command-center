@@ -10,3 +10,7 @@
 .result-row span{font-weight:700;text-transform:uppercase;letter-spacing:.04em}
 .result-row small{margin-left:8px;color:#64748b}
 .result-row p,.execution-result p{white-space:pre-wrap;overflow-wrap:anywhere;color:#9a3412;margin:6px 0 0}
+
+.failure-analysis{padding:8px 10px;border-left:3px solid #b45309;background:#fff7ed;color:#7c2d12!important;border-radius:0 6px 6px 0}
+.failure-analysis strong{text-transform:capitalize}
+.failure-analysis small{display:block;margin:5px 0 0;color:#9a3412}

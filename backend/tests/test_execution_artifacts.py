@@ -57,7 +57,7 @@ def test_cleanup_expires_oldest_artifact_to_respect_budget(tmp_path) -> None:
     first = store.save("run-1", "log", b"123456")
     second = store.save("run-2", "log", b"abcdef")
     # Set stable, old/new timestamps for deterministic oldest-first cleanup.
-    with store._connect() as connection:
+    with store._connection() as connection:
         connection.execute(
             "UPDATE artifacts SET created_at = ? WHERE artifact_id = ?",
             ((datetime.now(timezone.utc) - timedelta(minutes=2)).isoformat(),
@@ -96,7 +96,7 @@ def test_cleanup_expires_artifact_past_retention_age(tmp_path) -> None:
     )
     metadata = store.save("run-1", "log", b"old")
     old_time = datetime.now(timezone.utc) - timedelta(days=2)
-    with store._connect() as connection:
+    with store._connection() as connection:
         connection.execute(
             "UPDATE artifacts SET created_at = ? WHERE artifact_id = ?",
             (old_time.isoformat(), metadata["artifact_id"]),
@@ -147,7 +147,7 @@ def test_cleanup_expires_metadata_even_when_artifact_file_is_missing(tmp_path) -
     artifact_path = tmp_path / "artifacts" / f"{metadata['artifact_id']}.bin"
     artifact_path.unlink()
     old_time = datetime.now(timezone.utc) - timedelta(days=2)
-    with store._connect() as connection:
+    with store._connection() as connection:
         connection.execute(
             "UPDATE artifacts SET created_at = ? WHERE artifact_id = ?",
             (old_time.isoformat(), metadata["artifact_id"]),
@@ -204,7 +204,7 @@ def test_corrupt_storage_key_cannot_escape_artifact_root(tmp_path) -> None:
     metadata = store.save("run-corrupt-key", "log", b"evidence")
     outside = tmp_path / "outside.bin"
     outside.write_bytes(b"evidence")
-    with store._connect() as connection:
+    with store._connection() as connection:
         connection.execute(
             "UPDATE artifacts SET storage_key = ? WHERE artifact_id = ?",
             ("../outside.bin", metadata["artifact_id"]),

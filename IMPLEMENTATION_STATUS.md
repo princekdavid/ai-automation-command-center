@@ -26,7 +26,7 @@ Last updated: 2026-10-11
 - [x] Backend tests passed on failure-analysis commit `1394883aecbfa006d3e9c3e044abc75572049928`
 - [x] Frontend build passed on the same failure-analysis commit
 - [ ] Integration of the cumulative feature stack into main
-- [ ] Background run lifecycle and cancellation
+- [x] Background execution API, bounded in-process job lifecycle, status polling, and cooperative cancellation implemented; exact-head CI validation pending
 - [x] Local SQLite execution history API and recent-runs UI added and validated on this follow-up branch
 - [ ] Persistent evidence artifact storage
 - [x] Initial deterministic failure categorization with rule tests; expand coverage against representative real-world fixtures
@@ -57,7 +57,7 @@ Discovery skips common generated/virtual-environment directories and symlinks, c
 
 - Framework detection remains heuristic and does not comprehensively parse each package manager's dependency metadata.
 - Pytest markers, parametrization, fixtures, dynamic collection, and all pytest edge cases are not normalized.
-- The synchronous API request blocks until pytest finishes; background execution, cancellation, concurrency controls, and persistent run history are not implemented.
+- Authorized execution now returns an accepted response and runs in a bounded in-process worker pool. Status polling and cooperative cancellation are implemented, including terminate-then-kill behavior for a running pytest subprocess. The job queue is not durable: active jobs and cancellation handles are lost when the backend process restarts.
 - Results are returned to the caller but are not persisted; evidence references exist in the contract but no artifact storage pipeline is implemented.
 - Only pytest is implemented as an execution-capable reference adapter.
 - The API accepts a local filesystem path. Secure remote repository connectors, multi-user authentication/authorization, and an OS-level execution sandbox are not implemented.
@@ -66,7 +66,7 @@ Discovery skips common generated/virtual-environment directories and symlinks, c
 ## Next Steps
 
 1. Integrate PR #9, then #10, before this stacked follow-up.
-2. Add background run records and cancellation before expanding to bulk execution.
+2. Validate background lifecycle/cancellation on the exact branch head, then add durable queue semantics only if the deployment model requires them.
 3. Add durable evidence artifact storage and retention controls.
 4. Review deterministic categories against representative fixtures; retain unknown when evidence is weak.
 5. Add another adapter only after the normalized contracts stabilize.

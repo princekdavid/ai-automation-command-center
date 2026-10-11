@@ -87,3 +87,22 @@ def test_execution_artifact_endpoints_hide_unknown_execution(tmp_path, monkeypat
     response = TestClient(app).get("/api/v1/executions/missing/artifacts")
 
     assert response.status_code == 404
+
+
+def test_status_for_completed_historical_run_includes_artifacts(tmp_path, monkeypatch):
+    history = SQLiteExecutionHistoryStore(tmp_path / "history.sqlite3")
+    request = ExecutionRequest(
+        "historic-run", ExecutionMode.SINGLE,
+        ExecutionTarget(["pytest:test"], "/tmp/project", "pytest"),
+    )
+    history.save(request, ExecutionResult(
+        "historic-run", ExecutionStatus.PASSED,
+        metadata={"artifacts": [{"artifact_id": "report-id", "kind": "junit",
+                                 "byte_size": 42, "sha256": "d" * 64,
+                                 "created_at": "2026-10-11T10:00:00+00:00",
+                                 "media_type": "application/xml"}]},
+    ))
+    monkeypatch.setattr("aac.api.history_store", history)
+    response = TestClient(app).get("/api/v1/executions/historic-run/status")
+    assert response.status_code == 200
+    assert response.json()["metadata"]["artifacts"][0]["artifact_id"] == "report-id"

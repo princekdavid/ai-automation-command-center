@@ -104,3 +104,54 @@ def test_cleanup_expires_artifact_past_retention_age(tmp_path) -> None:
     store.cleanup()
 
     assert store.get_metadata("run-1", metadata["artifact_id"]) is None
+
+
+def test_missing_artifact_file_is_not_returned(tmp_path) -> None:
+    store = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=100,
+        max_total_bytes=200,
+    )
+    metadata = store.save("run-missing", "log", b"evidence")
+    (tmp_path / "artifacts" / f"{metadata['artifact_id']}.bin").unlink()
+
+    with pytest.raises(ArtifactNotFoundError):
+        store.read("run-missing", metadata["artifact_id"])
+
+
+def test_symlinked_artifact_file_is_not_returned(tmp_path) -> None:
+    store = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=100,
+        max_total_bytes=200,
+    )
+    metadata = store.save("run-symlink", "log", b"evidence")
+    artifact_path = tmp_path / "artifacts" / f"{metadata['artifact_id']}.bin"
+    outside = tmp_path / "outside.bin"
+    outside.write_bytes(b"evidence")
+    artifact_path.unlink()
+    try:
+        artifact_path.symlink_to(outside)
+    except (OSError, NotImplementedError):
+        pytest.skip("symlinks are unavailable in this environment")
+
+    with pytest.raises(ArtifactNotFoundError):
+        store.read("run-symlink", metadata["artifact_id"])
+
+
+def test_cleanup_expires_metadata_even_when_artifact_file_is_missing(tmp_path) -> None:
+    store = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=100,
+        max_total_bytes=200, retention_days=1,
+    )
+    metadata = store.save("run-orphan", "log", b"old")
+    artifact_path = tmp_path / "artifacts" / f"{metadata['artifact_id']}.bin"
+    artifact_path.unlink()
+    old_time = datetime.now(timezone.utc) - timedelta(days=2)
+    with store._connect() as connection:
+        connection.execute(
+            "UPDATE artifacts SET created_at = ? WHERE artifact_id = ?",
+            (old_time.isoformat(), metadata["artifact_id"]),
+        )
+
+    assert store.cleanup() == 1
+    assert store.get_metadata("run-orphan", metadata["artifact_id"]) is None
+

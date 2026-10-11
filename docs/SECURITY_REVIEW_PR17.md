@@ -1,14 +1,14 @@
 # PR #17 Security and Quality Review
 
-Review target: cumulative integration candidate `integration/evidence-retention-on-current-stack`. Latest code/test change: `6b677dc7ae17ecc68d183b5b7e18a08d84817531` (CI pending at the time of this update). Previous validated code/test head: `519043de82aeea90449738a17152b005bf87366b`.
+Review target: cumulative integration candidate `integration/evidence-retention-on-current-stack`. Latest code/test head reviewed and validated: `6b677dc7ae17ecc68d183b5b7e18a08d84817531`.
 
 ## Review summary
 
 A focused review identified a filesystem time-of-check/time-of-use risk in artifact reads: a leaf path could theoretically be swapped for a symlink after path validation but before `read_bytes()`. The current change opens the artifact with `O_NOFOLLOW` where the platform supports it, validates the opened descriptor is a regular file, and bounds the read to the configured per-artifact limit. A regression test also verifies that a directory cannot be returned as an artifact. This narrows the local filesystem race surface but is not a complete defense against a hostile process with the same OS user or platforms lacking `O_NOFOLLOW`. Existing controls include generated artifact filenames, parameterized SQL, execution-scoped lookups, SHA-256 and byte-size verification, bounded retention, and connection-closing context managers.
 
-Validation on the code/test head:
-- Backend [workflow #38165835764](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835764) — passed.
-- Frontend [workflow #38165835799](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835799) — passed.
+Validation on the latest code/test head `6b677dc7ae17ecc68d183b5b7e18a08d84817531`:
+- Backend [workflow #38170736828](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736828) — passed.
+- Frontend [workflow #38170736823](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736823) — passed.
 
 This is not a security certification. The product remains a local-only developer tool.
 

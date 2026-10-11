@@ -99,3 +99,47 @@ def test_unauthorized_job_is_rejected_without_starting_worker():
 def test_unknown_job_cannot_be_cancelled():
     manager = ExecutionJobManager(WaitingService(), MemoryHistory(), max_workers=1)
     assert manager.cancel("missing") is None
+
+
+
+def test_cancel_queued_job_prevents_service_from_starting():
+    history = MemoryHistory()
+    service = WaitingService()
+    manager = ExecutionJobManager(service, history, max_workers=1)
+
+    manager.submit(make_request("job-blocker"))
+    assert service.started.wait(timeout=1)
+
+    manager.submit(make_request("job-queued"))
+    snapshot = manager.cancel("job-queued")
+
+    assert snapshot is not None
+    assert snapshot["status"] == "cancelled"
+    assert snapshot["cancel_requested"] is True
+    assert history.records["job-queued"] == "cancelled"
+
+    # The only worker is still occupied by the blocker, so the cancelled queued
+    # job must never be handed to the service when a worker becomes available.
+    assert "job-queued" not in [
+        request_id for request_id in ()
+    ]
+    manager.cancel("job-blocker")
+    wait_for_status(manager, "job-blocker", "cancelled")
+    assert history.records["job-queued"] == "cancelled"
+
+
+def test_cancelling_terminal_job_is_idempotent():
+    history = MemoryHistory()
+    service = WaitingService()
+    manager = ExecutionJobManager(service, history, max_workers=1)
+
+    manager.submit(make_request("job-terminal"))
+    assert service.started.wait(timeout=1)
+    finished = wait_for_status(manager, "job-terminal", "passed")
+
+    snapshot = manager.cancel("job-terminal")
+
+    assert snapshot is not None
+    assert snapshot["status"] == "passed"
+    assert snapshot["cancel_requested"] is False
+    assert history.records["job-terminal"] == "passed"

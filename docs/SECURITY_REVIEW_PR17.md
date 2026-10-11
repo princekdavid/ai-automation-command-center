@@ -1,6 +1,6 @@
 # PR #17 Security and Quality Review
 
-Review target: cumulative integration candidate `integration/evidence-retention-on-current-stack`. Latest code/test head reviewed and validated: `1c9cc80ad02558567cb82165beef7b3f9198dc61`.
+Review target: cumulative integration candidate `integration/evidence-retention-on-current-stack`. Latest code/test head reviewed and validated: `519043de82aeea90449738a17152b005bf87366b`.
 
 ## Review summary
 

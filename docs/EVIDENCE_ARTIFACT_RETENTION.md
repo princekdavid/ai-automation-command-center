@@ -1,6 +1,6 @@
 # Evidence Artifact Storage and Retention
 
-Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Backend [workflow #38164963695](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963695) and frontend [workflow #38164963727](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963727) passed on code/test head `1c9cc80ad02558567cb82165beef7b3f9198dc61`. A subsequent documentation-only commit does not change the validated code/test tree.
+Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Backend [workflow #38165835764](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835764) and frontend [workflow #38165835799](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835799) passed on code/test head `519043de82aeea90449738a17152b005bf87366b`. The artifact tests use the store's closing connection context manager for database updates.
 
 ## Implemented
 

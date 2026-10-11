@@ -59,6 +59,13 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 - Backend tests passed on current PR head `aac61d71afba19b9d9a79672795d74173d846a4c`, including tampered-artifact handling and connection-closing regression coverage: [workflow run #93](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38163596960).
 - Frontend build passed on the same exact PR head: [workflow run #62](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38163596980).
 
+## PR Stack Integration Blocker (checked 2026-10-11)
+
+- PR #10 has new representative failure fixtures and a quoted-pytest-fixture matching fix; backend and frontend CI passed on its latest head.
+- PR #11's head is still based on the earlier PR #10 commit. Comparing the current PR #10 head with PR #11's head shows the branches have diverged, and GitHub currently reports PR #11 as not mergeable.
+- Do not merge PR #11, #13, or #14 yet. Reconcile the PR #11 branch with the updated PR #10 base, then revalidate the downstream history/background/artifact stack in dependency order.
+- No merge or branch-history rewrite was performed during this check.
+
 ## Known Limitations
 
 - Framework detection and pytest collection normalization remain incomplete for dynamic collection and some fixtures/parametrization cases.
@@ -70,8 +77,8 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 
 ## Next Steps
 
-1. Integrate the dependent execution PR stack in order and validate the cumulative branch before merging.
-2. Review the cumulative dependent PR stack for integration conflicts and merge in dependency order only after human review.
+1. Reconcile PR #11 with the latest PR #10 head; its current branch is diverged and GitHub reports it as not mergeable.
+2. Revalidate the cumulative PR #11 → #13 → #14 stack after reconciliation; keep all downstream PRs unmerged until the stack is green and reviewed.
 3. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.
 
 ## Tracking Rule

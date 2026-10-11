@@ -51,6 +51,8 @@ Discovery skips common generated/virtual-environment directories and symlinks, c
 - Persisted-history backend tests passed on code commit `62d0fe7d63532d04da99714739b09c214a9dd01a`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194742).
 - The same commit passed the frontend build: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
 - Subsequent commits update documentation only; no backend/frontend source changed after the validated code commit.
+- Background lifecycle/cancellation code at exact PR #13 head `180b903d3fcd458b464b82730662aa21d7b2ab88` passed backend CI (41 tests): [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390381).
+- The same PR #13 head passed the frontend build: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390394).
 - An earlier classifier test correctly exposed an over-broad `expected ` keyword; the rule was narrowed and the full backend suite passed on the newer commit.
 
 ## Known Limitations
@@ -58,7 +60,7 @@ Discovery skips common generated/virtual-environment directories and symlinks, c
 - Framework detection remains heuristic and does not comprehensively parse each package manager's dependency metadata.
 - Pytest markers, parametrization, fixtures, dynamic collection, and all pytest edge cases are not normalized.
 - Authorized execution now returns an accepted response and runs in a bounded in-process worker pool. Status polling and cooperative cancellation are implemented, including terminate-then-kill behavior for a running pytest subprocess. The job queue is not durable: active jobs and cancellation handles are lost when the backend process restarts.
-- Results are returned to the caller but are not persisted; evidence references exist in the contract but no artifact storage pipeline is implemented.
+- Normalized execution summaries and per-test outcome metadata are persisted in local SQLite history. Raw logs, raw failure messages, and evidence artifacts are not persisted; no artifact storage pipeline or retention policy is implemented.
 - Only pytest is implemented as an execution-capable reference adapter.
 - The API accepts a local filesystem path. Secure remote repository connectors, multi-user authentication/authorization, and an OS-level execution sandbox are not implemented.
 - UI run controls currently support one selected test at a time; bulk selection and live progress are future work.

@@ -3,6 +3,7 @@ import sqlite3
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from aac.discovery.service import DiscoveryService
@@ -11,6 +12,7 @@ from aac.execution.contracts import ExecutionMode, ExecutionPolicy, ExecutionReq
 from aac.execution.service import ExecutionService
 from aac.analysis.failure_classifier import classify_failure
 from aac.execution.history import SQLiteExecutionHistoryStore
+from aac.execution.jobs import ExecutionJobManager
 
 app = FastAPI(title="AI Automation Command Center", version="0.1.0")
 # Local Vite development origins only by default. Deployments must configure explicit trusted origins.
@@ -33,6 +35,7 @@ discovery = DiscoveryService()
 test_discovery = TestDiscoveryService(discovery=discovery)
 execution_service = ExecutionService(discovery_service=discovery)
 history_store = SQLiteExecutionHistoryStore()
+job_manager = ExecutionJobManager(execution_service, history_store, max_workers=2)
 
 class DiscoverRequest(BaseModel):
     project_path: str
@@ -82,7 +85,7 @@ def discover_tests(request: DiscoverRequest) -> dict:
     return {"count": len(tests), "tests": [_test_to_dict(x) for x in tests]}
 
 @app.post("/api/v1/executions")
-def execute(request: ExecuteRequest) -> dict:
+def execute(request: ExecuteRequest):
     execution = ExecutionRequest(
         request_id=__import__("uuid").uuid4().hex,
         mode=ExecutionMode.SINGLE if len(request.test_ids) == 1 else ExecutionMode.SELECTION,
@@ -96,38 +99,84 @@ def execute(request: ExecuteRequest) -> dict:
             timeout_seconds=request.timeout_seconds,
         ),
     )
-    try:
+    if not request.authorize_execution:
         result = execution_service.execute(execution)
-    except (ValueError, LookupError) as exc:
-        raise HTTPException(status_code=400, detail=str(exc)) from exc
-    history_saved = True
+        try:
+            history_store.save(execution, result)
+        except (OSError, sqlite3.Error):
+            pass
+        return {
+            "request_id": result.request_id,
+            "history_saved": False,
+            "status": result.status.value,
+            "results": [],
+            "started_at": result.started_at,
+            "completed_at": result.completed_at,
+            "error": result.error,
+            "metadata": result.metadata,
+        }
+
     try:
-        history_store.save(execution, result)
-    except (OSError, sqlite3.Error):
-        # The execution result is still returned if local history storage is unavailable.
-        history_saved = False
+        result = job_manager.submit(execution)
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(status_code=503, detail="Unable to persist execution request") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    return JSONResponse(
+        status_code=202 if result.status is ExecutionStatus.ACCEPTED else 200,
+        content={
+            "request_id": result.request_id,
+            "history_saved": True,
+            "status": result.status.value,
+            "results": [],
+            "started_at": result.started_at,
+            "completed_at": result.completed_at,
+            "error": result.error,
+            "metadata": result.metadata,
+        },
+    )
+
+
+@app.get("/api/v1/executions/{request_id}/status")
+def get_execution_status(request_id: str) -> dict:
+    snapshot = job_manager.get(request_id)
+    if snapshot is not None:
+        return snapshot
+    try:
+        record = history_store.get(request_id)
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(status_code=503, detail="Execution history is unavailable") from exc
+    if record is None:
+        raise HTTPException(status_code=404, detail="Execution not found")
     return {
-        "request_id": result.request_id,
-        "history_saved": history_saved,
-        "status": result.status.value,
-        "results": [
-            {
-                "test_id": item.test_id,
-                "outcome": item.outcome.value,
-                "duration_seconds": item.duration_seconds,
-                "message": item.message,
-                "evidence": [
-                    {"kind": ref.kind, "location": ref.location, "label": ref.label}
-                    for ref in item.evidence
-                ],
-            }
-            for item in result.results
-        ],
-        "started_at": result.started_at,
-        "completed_at": result.completed_at,
-        "error": result.error,
-        "metadata": result.metadata,
+        "request_id": record["request_id"],
+        "status": record["status"],
+        "cancel_requested": False,
+        "started_at": record["started_at"],
+        "completed_at": record["completed_at"],
+        "error": None,
+        "results": record["results"],
     }
+
+
+@app.post("/api/v1/executions/{request_id}/cancel")
+def cancel_execution(request_id: str) -> dict:
+    snapshot = job_manager.cancel(request_id)
+    if snapshot is None:
+        try:
+            exists = history_store.get(request_id)
+        except (OSError, sqlite3.Error) as exc:
+            raise HTTPException(status_code=503, detail="Execution history is unavailable") from exc
+        if exists is None:
+            raise HTTPException(status_code=404, detail="Execution not found")
+        return {
+            "request_id": request_id,
+            "status": exists["status"],
+            "cancel_requested": False,
+            "message": "Execution is no longer active",
+        }
+    return snapshot
 
 
 @app.get("/api/v1/executions")

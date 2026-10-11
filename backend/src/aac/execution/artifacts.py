@@ -9,9 +9,10 @@ import hashlib
 import os
 import sqlite3
 import uuid
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Iterable
+from typing import Iterator
 
 
 class ArtifactNotFoundError(LookupError):
@@ -64,7 +65,7 @@ class LocalEvidenceArtifactStore:
             resolved_root.relative_to(self.root.absolute().parent.resolve())
         except ValueError as exc:
             raise ArtifactStoreError("invalid artifact root") from exc
-        with self._connect() as connection:
+        with self._connection() as connection:
             connection.execute(
                 """
                 CREATE TABLE IF NOT EXISTS artifacts (
@@ -81,6 +82,16 @@ class LocalEvidenceArtifactStore:
                 """
             )
         return resolved_root
+
+    @contextmanager
+    def _connection(self) -> Iterator[sqlite3.Connection]:
+        """Commit/rollback transactions and always close SQLite connections."""
+        connection = self._connect()
+        try:
+            with connection:
+                yield connection
+        finally:
+            connection.close()
 
     def _connect(self) -> sqlite3.Connection:
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)

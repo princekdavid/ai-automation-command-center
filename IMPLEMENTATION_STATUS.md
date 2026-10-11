@@ -36,7 +36,7 @@ Last updated: 2026-10-11
 - [x] Persistent evidence artifact links surfaced in Test Explorer for active and historical executions
 - [x] SQLite history migration and safe artifact-reference persistence tests added
 - [x] Backend tests and frontend build passed on source head `66ea1e689626da0219abbb21a804e6dafdc68e84` (backend run #85, frontend run #54)
-- [x] Tampered-artifact API regression test passed; backend and frontend workflows passed on current PR head `7e67066c3f68ade9813b559bae8ddd1d03bc7292` (backend run #86, frontend run #55)
+- [x] Backend tests and frontend build passed on current PR head `aac61d71afba19b9d9a79672795d74173d846a4c` (backend run #93, frontend run #62), including tampered-artifact and SQLite connection-lifecycle regressions
 - [ ] Additional framework adapters
 - [ ] AI analysis
 
@@ -44,7 +44,7 @@ Last updated: 2026-10-11
 
 The reconciled feature stack includes project/test discovery, adapter capability reporting, a React/TypeScript Test Explorer, explicitly authorized local pytest execution, deterministic failure categorization, local SQLite execution history, and a bounded in-process background worker with status polling and cancellation. These capabilities are spread across dependent open PRs and are not all merged into `main`.
 
-The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` in [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856); frontend build passed on the same head in [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878). Artifact references are now included in SQLite history using an additive schema migration and an allowlist of safe metadata fields. The Test Explorer renders links on recent historical runs. Tests cover safe metadata persistence, legacy database migration, historical status API, missing files, symlinked artifact files, cleanup with missing files, tampered content, and downloads after expiry. The missing/symlink/expiry test additions at `ad965c4013f4b3d720d209ef8bb1a1c1449f2a6f` passed backend CI on source head `66ea1e689626da0219abbb21a804e6dafdc68e84`. The final API regression test for tampered artifact downloads was added at `ec12891b3b2c9ce6d3652d9c2294107dfcba6057`. Backend tests and frontend build subsequently both passed on the current PR head `7e67066c3f68ade9813b559bae8ddd1d03bc7292` (backend run #86 and frontend run #55), validating the cumulative branch including this test.
+The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` in [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856); frontend build passed on the same head in [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878). Artifact references are now included in SQLite history using an additive schema migration and an allowlist of safe metadata fields. The Test Explorer renders links on recent historical runs. Tests cover safe metadata persistence, legacy database migration, historical status API, missing files, symlinked artifact files, cleanup with missing files, tampered content, and downloads after expiry. The missing/symlink/expiry test additions at `ad965c4013f4b3d720d209ef8bb1a1c1449f2a6f` passed backend CI on source head `66ea1e689626da0219abbb21a804e6dafdc68e84`. The final API regression test for tampered artifact downloads was added at `ec12891b3b2c9ce6d3652d9c2294107dfcba6057`. Backend tests and frontend build subsequently both passed on the current PR head `aac61d71afba19b9d9a79672795d74173d846a4c` (backend run #93 and frontend run #62), validating the cumulative branch including this test and the new SQLite connection-lifecycle regression.
 
 ## Validation Evidence
 
@@ -56,15 +56,15 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 - Persisted-history frontend build passed on the same commit: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
 - Background lifecycle/cancellation backend tests passed on PR #13 head `180b903d3fcd458b464b82730662aa21d7b2ab88` (41 tests): [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390381).
 - Background lifecycle frontend build passed on that PR #13 head: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390394).
-- Backend tests passed on the current PR head `7e67066c3f68ade9813b559bae8ddd1d03bc7292`, including the tampered-artifact API regression: [workflow run #86](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38163341634).
-- Frontend build passed on the same exact PR head: [workflow run #55](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38163341631).
+- Backend tests passed on current PR head `aac61d71afba19b9d9a79672795d74173d846a4c`, including tampered-artifact handling and connection-closing regression coverage: [workflow run #93](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38163596960).
+- Frontend build passed on the same exact PR head: [workflow run #62](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38163596980).
 
 ## Known Limitations
 
 - Framework detection and pytest collection normalization remain incomplete for dynamic collection and some fixtures/parametrization cases.
 - The in-process job queue loses active jobs/cancellation handles on backend restart.
 - Local history stores normalized summaries only; it is unencrypted and currently has no retention policy.
-- Artifact persistence is opt-in and wired to JUnit reports. Safe artifact references are persisted in SQLite history and shown in Test Explorer. Current exact-head backend and frontend CI both pass.
+- Artifact persistence is opt-in and wired to JUnit reports. Safe artifact references are persisted in SQLite history and shown in Test Explorer. Current exact-head backend and frontend CI both pass. Artifact-store SQLite connections now close consistently through a shared transaction/cleanup context manager.
 - Only pytest is execution-capable; remote repository connectors, multi-user auth, and OS-level sandboxing are not implemented.
 - UI supports one selected test at a time; bulk selection and richer live progress are future work.
 

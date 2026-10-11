@@ -22,57 +22,54 @@ Last updated: 2026-10-11
 - [x] Normalized execution status/result display in the UI
 - [x] Backend CI passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`
 - [x] Frontend build passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`
-- [x] Deterministic rule-based failure classification API and UI display added on this follow-up branch
+- [x] Deterministic rule-based failure classification API and UI display added on follow-up branch
 - [x] Backend tests passed on failure-analysis commit `1394883aecbfa006d3e9c3e044abc75572049928`
 - [x] Frontend build passed on the same failure-analysis commit
-- [ ] Integration of the cumulative feature stack into main
-- [x] Background execution API, bounded in-process job lifecycle, status polling, and cooperative cancellation implemented; exact-head CI validation pending
-- [x] Local SQLite execution history API and recent-runs UI added and validated on this follow-up branch
-- [ ] Persistent evidence artifact storage
-- [x] Initial deterministic failure categorization with rule tests; expand coverage against representative real-world fixtures
+- [ ] Integration of cumulative feature stack into main
+- [x] Background execution API, bounded in-process lifecycle, status polling, and cancellation implemented
+- [x] Local SQLite execution history API and recent-runs UI added and validated on follow-up branch
+- [x] Initial local evidence artifact store module and unit tests added on `feat/evidence-artifact-retention`
+- [ ] Exact-head CI validation of artifact store and tests
+- [ ] Integration of artifact store with execution lifecycle and API endpoints
+- [ ] Persistent evidence artifacts available through Test Explorer
 - [ ] Additional framework adapters
 - [ ] AI analysis
 
 ## Current State
 
-This branch extends the reconciled execution vertical slice with deterministic, keyword-based failure classification, a local SQLite execution-history API, and a recent-runs UI. The UI supports discovery, normalized test details, an explicit authorization checkbox, and running one selected pytest test with a bounded timeout. The API defaults authorization to false and rejects unsupported runners/capabilities and test IDs that were not discovered for the project.
+The reconciled feature stack includes project/test discovery, adapter capability reporting, a React/TypeScript Test Explorer, explicitly authorized local pytest execution, deterministic failure categorization, local SQLite execution history, and a bounded in-process background worker with status polling and cancellation. These capabilities are spread across dependent open PRs and are not all merged into `main`.
 
-The executor uses an argument list rather than shell interpolation, captures stdout/stderr, enforces a timeout, and normalizes JUnit XML results. Class-method results are matched using JUnit class metadata. The failure-analysis endpoint classifies normalized failed/error results with transparent ordered keyword rules; passed/skipped results are marked not applicable and unrecognized failures remain unknown. The history store persists status, timestamps, per-test outcome/duration, failure category, matched rule, and evidence count. It deliberately excludes raw stdout/stderr and raw per-test messages. This is a controlled local executor, not a sandbox; running a test can execute arbitrary code from the selected project and should only be authorized for trusted projects.
-
-Discovery skips common generated/virtual-environment directories and symlinks, checks resolved paths remain inside the project, handles inaccessible paths conservatively, and limits inspected file sizes and returned path lists. These safeguards are not a complete filesystem sandbox.
+The new artifact-store branch adds an opt-in local storage module with generated artifact IDs, SHA-256 integrity checks, per-artifact size limits, age-based expiration, and oldest-first budget cleanup. Its initial unit tests have been added but exact-head CI has not yet been confirmed. The module is not yet connected to execution completion or exposed through API endpoints; do not claim the end-to-end artifact feature is complete.
 
 ## Validation Evidence
 
-- Backend tests passed on the reconciled code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634577).
-- Frontend build passed on the same code commit: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634579).
-- The later commit `90876b86ad1630e5c4f2cc95d4f4458c228c252b` changes README documentation only; no backend/frontend source changed after the validated code commit for PR #9.
-- The failure-analysis follow-up commit `1394883aecbfa006d3e9c3e044abc75572049928` passed backend tests: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897550).
-- The same commit passed the frontend build: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897545).
-- Persisted-history backend tests passed on code commit `62d0fe7d63532d04da99714739b09c214a9dd01a`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194742).
-- The same commit passed the frontend build: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
-- Subsequent commits update documentation only; no backend/frontend source changed after the validated code commit.
-- Background lifecycle/cancellation code at exact PR #13 head `180b903d3fcd458b464b82730662aa21d7b2ab88` passed backend CI (41 tests): [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390381).
-- The same PR #13 head passed the frontend build: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390394).
-- An earlier classifier test correctly exposed an over-broad `expected ` keyword; the rule was narrowed and the full backend suite passed on the newer commit.
+- Backend tests passed on reconciled execution code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634577).
+- Frontend build passed on that commit: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634579).
+- Failure-analysis backend tests passed on `1394883aecbfa006d3e9c3e044abc75572049928`: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897550).
+- Failure-analysis frontend build passed on the same commit: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897545).
+- Persisted-history backend tests passed on `62d0fe7d63532d04da99714739b09c214a9dd01a`: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194742).
+- Persisted-history frontend build passed on the same commit: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
+- Background lifecycle/cancellation backend tests passed on PR #13 head `180b903d3fcd458b464b82730662aa21d7b2ab88` (41 tests): [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390381).
+- Background lifecycle frontend build passed on that PR #13 head: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390394).
+- Artifact-store tests are newly added; no exact-head workflow result is verified yet.
 
 ## Known Limitations
 
-- Framework detection remains heuristic and does not comprehensively parse each package manager's dependency metadata.
-- Pytest markers, parametrization, fixtures, dynamic collection, and all pytest edge cases are not normalized.
-- Authorized execution now returns an accepted response and runs in a bounded in-process worker pool. Status polling and cooperative cancellation are implemented, including terminate-then-kill behavior for a running pytest subprocess. The job queue is not durable: active jobs and cancellation handles are lost when the backend process restarts.
-- Normalized execution summaries and per-test outcome metadata are persisted in local SQLite history. Raw logs, raw failure messages, and evidence artifacts are not persisted; no artifact storage pipeline or retention policy is implemented.
-- Only pytest is implemented as an execution-capable reference adapter.
-- The API accepts a local filesystem path. Secure remote repository connectors, multi-user authentication/authorization, and an OS-level execution sandbox are not implemented.
-- UI run controls currently support one selected test at a time; bulk selection and live progress are future work.
+- Framework detection and pytest collection normalization remain incomplete for dynamic collection and some fixtures/parametrization cases.
+- The in-process job queue loses active jobs/cancellation handles on backend restart.
+- Local history stores normalized summaries only; it is unencrypted and currently has no retention policy.
+- Artifact storage is not integrated into the execution lifecycle/API yet.
+- Only pytest is execution-capable; remote repository connectors, multi-user auth, and OS-level sandboxing are not implemented.
+- UI supports one selected test at a time; bulk selection and richer live progress are future work.
 
 ## Next Steps
 
-1. Integrate PR #9, then #10, before this stacked follow-up.
-2. Validate background lifecycle/cancellation on the exact branch head, then add durable queue semantics only if the deployment model requires them.
-3. Add durable evidence artifact storage and retention controls.
-4. Review deterministic categories against representative fixtures; retain unknown when evidence is weak.
-5. Add another adapter only after the normalized contracts stabilize.
+1. Integrate the dependent execution PR stack in order and validate the cumulative branch before merging.
+2. Validate the new artifact-store code on its exact head; fix failures before adding API wiring.
+3. Integrate safe artifact persistence into terminal execution, with bounded metadata and execution-scoped download endpoints.
+4. Add API lifecycle/scope tests and ensure evidence failures never overwrite test outcomes.
+5. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.
 
 ## Tracking Rule
 
-Update this file after every meaningful implementation milestone. Never mark functionality complete without validation.
+Update this file after every meaningful milestone. Never mark functionality complete without validation.

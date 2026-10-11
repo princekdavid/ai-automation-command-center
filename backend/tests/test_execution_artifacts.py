@@ -67,6 +67,7 @@ def test_cleanup_expires_oldest_artifact_to_respect_budget(tmp_path) -> None:
             (datetime.now(timezone.utc).isoformat(), second["artifact_id"]),
         )
 
+    store.max_total_bytes = 8
     store.cleanup()
 
     with pytest.raises(ArtifactNotFoundError):

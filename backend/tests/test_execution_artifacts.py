@@ -179,3 +179,36 @@ def test_store_closes_all_database_connections(tmp_path, monkeypatch) -> None:
     for connection in opened:
         with pytest.raises(sqlite3.ProgrammingError, match="closed"):
             connection.execute("SELECT 1")
+
+
+def test_symlinked_artifact_root_is_rejected(tmp_path) -> None:
+    real_root = tmp_path / "real-artifacts"
+    real_root.mkdir()
+    linked_root = tmp_path / "linked-artifacts"
+    try:
+        linked_root.symlink_to(real_root, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        pytest.skip("directory symlinks are unavailable in this environment")
+
+    store = LocalEvidenceArtifactStore(linked_root, enabled=True)
+
+    with pytest.raises(ArtifactStoreError, match="symlink"):
+        store.list_metadata("run-root-link")
+
+
+def test_corrupt_storage_key_cannot_escape_artifact_root(tmp_path) -> None:
+    store = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=100,
+        max_total_bytes=200,
+    )
+    metadata = store.save("run-corrupt-key", "log", b"evidence")
+    outside = tmp_path / "outside.bin"
+    outside.write_bytes(b"evidence")
+    with store._connect() as connection:
+        connection.execute(
+            "UPDATE artifacts SET storage_key = ? WHERE artifact_id = ?",
+            ("../outside.bin", metadata["artifact_id"]),
+        )
+
+    with pytest.raises(ArtifactNotFoundError):
+        store.read("run-corrupt-key", metadata["artifact_id"])

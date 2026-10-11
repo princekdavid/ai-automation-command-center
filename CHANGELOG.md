@@ -17,13 +17,16 @@ All notable project changes should be recorded here.
 - Deterministic failure-analysis API with transparent keyword rules and UI category display
 - Local SQLite execution history with bounded list/detail endpoints and recent-runs UI
 - Bounded in-process background execution with accepted/running/terminal status, status polling, and cooperative pytest cancellation
+- Initial opt-in local evidence artifact store module with generated IDs, SHA-256 checks, per-artifact limits, retention cleanup, and unit tests; API/lifecycle integration and exact-head validation remain pending
 
 ### Security and limitations
-- Execution is local and synchronous; it is not an OS-level sandbox.
-- Running a test may execute arbitrary project code; explicit authorization is required.
+- Execution is local and is not an OS-level sandbox; running a test may execute arbitrary project code.
+- Explicit authorization is required before executing trusted local projects.
 - No repository mutation, package installation, deployment, remote execution, retries, or self-healing is implemented.
-- Persistent/distributed job scheduling and evidence artifact storage remain pending. The current background worker pool is process-local and is not a durable queue. Local history stores normalized summaries only; the database is unencrypted and has no retention policy. Deterministic failure categorization is implemented but requires broader fixture validation.
-- Backend tests and frontend build passed on code commit `62d0fe7d63532d04da99714739b09c214a9dd01a`; see the Implementation Status for the exact workflow links.
+- Background execution is process-local, not a durable queue.
+- Local history stores normalized summaries only; the database is unencrypted and has no retention policy.
+- Artifact persistence is disabled by default and is not yet wired into the execution lifecycle or API. Do not treat it as an end-to-end feature until integration and exact-head CI pass.
+- Historical backend/frontend workflow links and exact commits are recorded in `IMPLEMENTATION_STATUS.md`; no CI pass is claimed for the newly added artifact module yet.
 
 ## Previous Foundation
 - Product vision and non-goals

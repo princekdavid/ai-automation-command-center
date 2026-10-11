@@ -3,7 +3,7 @@ import sqlite3
 from typing import Literal
 
 from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from aac.discovery.service import DiscoveryService
@@ -13,6 +13,7 @@ from aac.execution.service import ExecutionService
 from aac.analysis.failure_classifier import classify_failure
 from aac.execution.history import SQLiteExecutionHistoryStore
 from aac.execution.jobs import ExecutionJobManager
+from aac.execution.artifacts import ArtifactNotFoundError, LocalEvidenceArtifactStore
 
 app = FastAPI(title="AI Automation Command Center", version="0.1.0")
 # Local Vite development origins only by default. Deployments must configure explicit trusted origins.
@@ -35,6 +36,7 @@ discovery = DiscoveryService()
 test_discovery = TestDiscoveryService(discovery=discovery)
 execution_service = ExecutionService(discovery_service=discovery)
 history_store = SQLiteExecutionHistoryStore()
+artifact_store = LocalEvidenceArtifactStore()
 job_manager = ExecutionJobManager(execution_service, history_store, max_workers=2)
 
 class DiscoverRequest(BaseModel):
@@ -198,6 +200,47 @@ def get_execution(request_id: str) -> dict:
     if execution is None:
         raise HTTPException(status_code=404, detail="Execution history record not found")
     return execution
+
+
+def _execution_exists(request_id: str) -> bool:
+    if job_manager.get(request_id) is not None:
+        return True
+    try:
+        return history_store.get(request_id) is not None
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(status_code=503, detail="Execution history is unavailable") from exc
+
+
+@app.get("/api/v1/executions/{request_id}/artifacts")
+def list_execution_artifacts(request_id: str) -> dict:
+    if not _execution_exists(request_id):
+        raise HTTPException(status_code=404, detail="Execution not found")
+    try:
+        artifacts = artifact_store.list_metadata(request_id)
+    except (OSError, sqlite3.Error, RuntimeError) as exc:
+        raise HTTPException(status_code=503, detail="Evidence storage is unavailable") from exc
+    return {"count": len(artifacts), "artifacts": artifacts}
+
+
+@app.get("/api/v1/executions/{request_id}/artifacts/{artifact_id}")
+def download_execution_artifact(request_id: str, artifact_id: str) -> Response:
+    if not _execution_exists(request_id):
+        raise HTTPException(status_code=404, detail="Execution not found")
+    try:
+        metadata, content = artifact_store.read(request_id, artifact_id)
+    except ArtifactNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Evidence artifact not found") from exc
+    except (OSError, sqlite3.Error, RuntimeError) as exc:
+        raise HTTPException(status_code=503, detail="Evidence storage is unavailable") from exc
+    return Response(
+        content=content,
+        media_type=metadata["media_type"],
+        headers={
+            "Content-Disposition": 'attachment; filename="evidence.bin"',
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "no-store",
+        },
+    )
 
 
 @app.post("/api/v1/analysis/failures")

@@ -6,7 +6,7 @@ Last updated: 2026-10-12
 
 - **Pull request:** [#17 — cumulative integration candidate](https://github.com/princekdavid/ai-automation-command-center/pull/17)
 - **Branch:** `integration/evidence-retention-on-current-stack`
-- **Latest code/test head validated:** `519043de82aeea90449738a17152b005bf87366b`
+- **Latest code/test change:** `6b677dc7ae17ecc68d183b5b7e18a08d84817531` (CI pending; prior validated head `519043de82aeea90449738a17152b005bf87366b`)
 - **State:** draft, open, not merged
 - **Backend:** [workflow #38165835764](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835764) passed on that code/test head
 - **Frontend:** [workflow #38165835799](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835799) passed on that code/test head
@@ -25,7 +25,8 @@ This candidate combines deterministic failure analysis, SQLite execution history
 - [x] Background job status, cooperative cancellation, and bounded in-process worker pool
 - [x] Opt-in local evidence artifacts, generated IDs, execution scoping, size/age/budget limits, and SHA-256 integrity checks
 - [x] Artifact listing/download API and historical Test Explorer references
-- [x] Regression tests for symlinked artifact roots and corrupted storage keys escaping the artifact root
+- [x] Regression tests for symlinked artifact roots, corrupted storage keys, and non-regular artifact paths
+- [ ] Revalidate backend/frontend CI after the artifact read hardening commit
 - [x] Backend tests and frontend build passed on the latest code/test head above
 
 ## Security and operating boundaries
@@ -41,7 +42,7 @@ This candidate combines deterministic failure analysis, SQLite execution history
 
 1. Continue production-hardening review, especially API authentication/network controls before any non-local deployment.
 2. Consider tighter permission handling for pre-existing artifact directories/database files and a history retention policy.
-3. Continue evaluating concurrent cleanup behavior and filesystem race conditions.
+3. Continue evaluating concurrent cleanup/retention consistency and same-user filesystem races; this change hardens reads with `O_NOFOLLOW` where supported but is not a complete OS-level sandbox.
 4. Reconcile original stacked PRs only after the cumulative candidate is reviewed; do not merge them automatically.
 5. Add additional framework adapters only after the normalized contracts stabilize.
 

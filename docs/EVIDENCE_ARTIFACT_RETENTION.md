@@ -1,10 +1,10 @@
 # Evidence Artifact Storage and Retention (MVP)
 
-Status: implementation integrated into pytest execution and API; exact-head validation pending.
+Status: implementation integrated into pytest execution and API; backend CI passed on exact source head `5d696b39bce1142e3e8e528df8e3f074aef4c50b` ([workflow run #69](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162657430)).
 Branch: `feat/evidence-artifact-retention`
 Scope: local, single-user MVP only.
 
-## Implemented in this branch (exact-head CI still pending)
+## Implemented in this branch (backend CI passed on exact source head)
 
 - Opt-in local artifact store; disabled by default via `AAC_ARTIFACTS_ENABLED=false`.
 - Configurable root via `AAC_ARTIFACTS_DIR`; default `~/.ai-automation-command-center/artifacts`.
@@ -32,9 +32,9 @@ Keep compact normalized run summaries in the existing history store and artifact
 
 ## Remaining integration work
 
-1. Run backend tests on the exact feature head and fix any failures.
-2. Verify best-effort JUnit persistence, bounded metadata endpoints, and safe downloads on exact-head CI.
-3. Add Test Explorer links only after backend validation.
+1. Add Test Explorer links and validate the frontend build.
+2. Add API tests for missing/expired artifacts and non-leaking errors.
+3. Add symlink/root-boundary, idempotent cleanup, missing-file, corrupt metadata, and partial-write tests where supported.
 4. Ensure API responses expose only opaque IDs and metadata, never storage keys or absolute paths.
 5. Add API tests for missing/expired artifacts and non-leaking errors.
 6. Add symlink/root-boundary, idempotent cleanup, missing-file, corrupt metadata, and partial-write tests where supported.

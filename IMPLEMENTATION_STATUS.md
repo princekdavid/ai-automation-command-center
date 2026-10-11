@@ -36,7 +36,7 @@ Last updated: 2026-10-11
 - [x] Persistent evidence artifact links surfaced in Test Explorer for active and historical executions
 - [x] SQLite history migration and safe artifact-reference persistence tests added
 - [x] Backend tests and frontend build passed on source head `66ea1e689626da0219abbb21a804e6dafdc68e84` (backend run #85, frontend run #54)
-- [ ] Validate the final API regression test for tampered artifact downloads added at `ec12891b3b2c9ce6d3652d9c2294107dfcba6057`
+- [x] Tampered-artifact API regression test passed; backend and frontend workflows passed on current PR head `7e67066c3f68ade9813b559bae8ddd1d03bc7292` (backend run #86, frontend run #55)
 - [ ] Additional framework adapters
 - [ ] AI analysis
 
@@ -44,7 +44,7 @@ Last updated: 2026-10-11
 
 The reconciled feature stack includes project/test discovery, adapter capability reporting, a React/TypeScript Test Explorer, explicitly authorized local pytest execution, deterministic failure categorization, local SQLite execution history, and a bounded in-process background worker with status polling and cancellation. These capabilities are spread across dependent open PRs and are not all merged into `main`.
 
-The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` in [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856); frontend build passed on the same head in [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878). Artifact references are now included in SQLite history using an additive schema migration and an allowlist of safe metadata fields. The Test Explorer renders links on recent historical runs. Tests cover safe metadata persistence, legacy database migration, historical status API, missing files, symlinked artifact files, cleanup with missing files, tampered content, and downloads after expiry. The missing/symlink/expiry test additions at `ad965c4013f4b3d720d209ef8bb1a1c1449f2a6f` passed backend CI on source head `66ea1e689626da0219abbb21a804e6dafdc68e84`. A final API regression test for tampered artifact downloads was added at `ec12891b3b2c9ce6d3652d9c2294107dfcba6057`; validation of this newest test is pending.
+The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` in [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856); frontend build passed on the same head in [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878). Artifact references are now included in SQLite history using an additive schema migration and an allowlist of safe metadata fields. The Test Explorer renders links on recent historical runs. Tests cover safe metadata persistence, legacy database migration, historical status API, missing files, symlinked artifact files, cleanup with missing files, tampered content, and downloads after expiry. The missing/symlink/expiry test additions at `ad965c4013f4b3d720d209ef8bb1a1c1449f2a6f` passed backend CI on source head `66ea1e689626da0219abbb21a804e6dafdc68e84`. The final API regression test for tampered artifact downloads was added at `ec12891b3b2c9ce6d3652d9c2294107dfcba6057`. Backend tests and frontend build subsequently both passed on the current PR head `7e67066c3f68ade9813b559bae8ddd1d03bc7292` (backend run #86 and frontend run #55), validating the cumulative branch including this test.
 
 ## Validation Evidence
 
@@ -56,8 +56,8 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 - Persisted-history frontend build passed on the same commit: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
 - Background lifecycle/cancellation backend tests passed on PR #13 head `180b903d3fcd458b464b82730662aa21d7b2ab88` (41 tests): [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390381).
 - Background lifecycle frontend build passed on that PR #13 head: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390394).
-- Backend tests passed on earlier source head `014649e0616d72b40957928ee2fb397d74ff43fb`, including artifact storage, executor integration, API endpoints, status metadata, and regression tests: [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856).
-- Frontend build passed on that earlier source head with active-session artifact download links in Test Explorer: [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878). The history-persistence updates are not yet validated by CI.
+- Backend tests passed on the current PR head `7e67066c3f68ade9813b559bae8ddd1d03bc7292`, including the tampered-artifact API regression: [workflow run #86](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38163341634).
+- Frontend build passed on the same exact PR head: [workflow run #55](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38163341631).
 
 ## Known Limitations
 
@@ -71,9 +71,8 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 ## Next Steps
 
 1. Integrate the dependent execution PR stack in order and validate the cumulative branch before merging.
-2. Validate persisted artifact references and the historical-run UI on the latest exact head.
-3. Validate the newest artifact lifecycle regression tests on the exact current head.
-4. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.
+2. Review the cumulative dependent PR stack for integration conflicts and merge in dependency order only after human review.
+3. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.
 
 ## Tracking Rule
 

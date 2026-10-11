@@ -126,7 +126,7 @@ class PytestExecutor:
                 status = ExecutionStatus.PASSED if process.returncode == 0 else ExecutionStatus.FAILED
                 error = None if process.returncode == 0 else (stderr_tail or stdout_tail)[-4000:]
                 metadata = {}
-                if report.is_file():
+                if self.artifact_store.enabled and report.is_file():
                     try:
                         artifact = self.artifact_store.save(
                             request_id, "junit", report.read_bytes(), "application/xml"

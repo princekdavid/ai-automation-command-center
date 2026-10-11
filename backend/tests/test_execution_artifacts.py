@@ -51,7 +51,7 @@ def test_artifact_is_scoped_to_execution_and_rejects_oversize(tmp_path) -> None:
 def test_cleanup_expires_oldest_artifact_to_respect_budget(tmp_path) -> None:
     store = LocalEvidenceArtifactStore(
         tmp_path / "artifacts", enabled=True, max_artifact_bytes=8,
-        max_total_bytes=8, retention_days=30,
+        max_total_bytes=12, retention_days=30,
     )
     first = store.save("run-1", "log", b"123456")
     second = store.save("run-2", "log", b"abcdef")

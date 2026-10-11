@@ -135,6 +135,12 @@ class ExecutionJobManager:
             job["cancel_requested"] = True
             job["cancel_event"].set()
             future: Future | None = job["future"]
-            if future is not None:
-                future.cancel()
+            if future is not None and future.cancel():
+                cancelled = ExecutionResult(
+                    request_id,
+                    ExecutionStatus.CANCELLED,
+                    error="Execution cancelled before it started",
+                )
+                job["result"] = cancelled
+                self._history.save(job["request"], cancelled)
             return self.get(request_id)

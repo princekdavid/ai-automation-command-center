@@ -7,8 +7,8 @@ Review target: cumulative integration candidate `integration/evidence-retention-
 No direct evidence of an artifact path traversal, cross-execution read, digest-bypass, or SQLite connection-lifetime defect was found in the reviewed implementation. The implementation uses generated artifact filenames, parameterized SQL, execution-scoped lookups, resolved-path checks, SHA-256 and byte-size verification, bounded retention, and connection-closing context managers. Tests cover execution scoping, tampering, missing files, leaf/root symlinks, retention, schema migration, and corrupted storage-key path escape.
 
 Validation on the code/test head:
-- Backend [workflow #38164963695](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963695) — passed.
-- Frontend [workflow #38164963727](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963727) — passed.
+- Backend [workflow #38165835764](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835764) — passed.
+- Frontend [workflow #38165835799](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835799) — passed.
 
 This is not a security certification. The product remains a local-only developer tool.
 

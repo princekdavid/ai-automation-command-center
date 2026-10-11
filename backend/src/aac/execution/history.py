@@ -37,10 +37,14 @@ class SQLiteExecutionHistoryStore:
                 created_at TEXT NOT NULL,
                 started_at TEXT,
                 completed_at TEXT,
-                results_json TEXT NOT NULL
+                results_json TEXT NOT NULL,
+                artifact_refs_json TEXT NOT NULL DEFAULT '[]'
             )
             """
         )
+        columns = {row["name"] for row in connection.execute("PRAGMA table_info(execution_history)")}
+        if "artifact_refs_json" not in columns:
+            connection.execute("ALTER TABLE execution_history ADD COLUMN artifact_refs_json TEXT NOT NULL DEFAULT '[]'")
         return connection
 
     @contextmanager
@@ -72,13 +76,20 @@ class SQLiteExecutionHistoryStore:
                 }
             )
 
+        allowed_artifact_fields = ("artifact_id", "kind", "byte_size", "sha256", "created_at", "media_type")
+        artifact_refs = [
+            {key: artifact[key] for key in allowed_artifact_fields if key in artifact}
+            for artifact in result.metadata.get("artifacts", [])
+            if isinstance(artifact, dict) and isinstance(artifact.get("artifact_id"), str)
+        ]
+
         with self._connection() as connection:
             connection.execute(
                 """
                 INSERT INTO execution_history
                     (request_id, project_path, runner, status, created_at,
-                     started_at, completed_at, results_json)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                     started_at, completed_at, results_json, artifact_refs_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(request_id) DO UPDATE SET
                     project_path=excluded.project_path,
                     runner=excluded.runner,
@@ -86,7 +97,8 @@ class SQLiteExecutionHistoryStore:
                     created_at=excluded.created_at,
                     started_at=excluded.started_at,
                     completed_at=excluded.completed_at,
-                    results_json=excluded.results_json
+                    results_json=excluded.results_json,
+                    artifact_refs_json=excluded.artifact_refs_json
                 """,
                 (
                     result.request_id,
@@ -97,17 +109,18 @@ class SQLiteExecutionHistoryStore:
                     result.started_at,
                     result.completed_at,
                     json.dumps(summaries, separators=(",", ":"), ensure_ascii=False),
+                    json.dumps(artifact_refs, separators=(",", ":"), ensure_ascii=False),
                 ),
             )
 
     def list_recent(self, limit: int = 20) -> list[dict[str, Any]]:
         if not 1 <= limit <= 100:
             raise ValueError("limit must be between 1 and 100")
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """
                 SELECT request_id, project_path, runner, status, created_at,
-                       started_at, completed_at, results_json
+                       started_at, completed_at, results_json, artifact_refs_json
                 FROM execution_history
                 ORDER BY created_at DESC, request_id DESC
                 LIMIT ?
@@ -117,11 +130,11 @@ class SQLiteExecutionHistoryStore:
         return [self._row_to_dict(row) for row in rows]
 
     def get(self, request_id: str) -> dict[str, Any] | None:
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """
                 SELECT request_id, project_path, runner, status, created_at,
-                       started_at, completed_at, results_json
+                       started_at, completed_at, results_json, artifact_refs_json
                 FROM execution_history
                 WHERE request_id = ?
                 """,
@@ -140,4 +153,5 @@ class SQLiteExecutionHistoryStore:
             "started_at": row["started_at"],
             "completed_at": row["completed_at"],
             "results": json.loads(row["results_json"]),
+            "artifacts": json.loads(row["artifact_refs_json"]),
         }

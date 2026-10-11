@@ -123,6 +123,7 @@ class ExecutionJobManager:
                 "started_at": job["result"].started_at,
                 "completed_at": job["result"].completed_at,
                 "error": job["result"].error,
+                "metadata": job["result"].metadata,
                 "results": [
                     {
                         "test_id": item.test_id,

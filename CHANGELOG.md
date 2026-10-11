@@ -17,13 +17,16 @@ All notable project changes should be recorded here.
 - Deterministic failure-analysis API with transparent keyword rules and UI category display
 - Local SQLite execution history with bounded list/detail endpoints and recent-runs UI
 - Bounded in-process background execution with accepted/running/terminal status, status polling, and cooperative pytest cancellation
+- Opt-in local evidence artifact storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, retention cleanup, best-effort JUnit report retention, execution-scoped metadata/download endpoints, Test Explorer download links for active and historical runs, SQLite artifact-reference persistence with additive migration, and regression tests; validation of the newest history integration is pending (earlier backend/frontend checks passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb`)
 
 ### Security and limitations
-- Execution is local and synchronous; it is not an OS-level sandbox.
-- Running a test may execute arbitrary project code; explicit authorization is required.
+- Execution is local and is not an OS-level sandbox; running a test may execute arbitrary project code.
+- Explicit authorization is required before executing trusted local projects.
 - No repository mutation, package installation, deployment, remote execution, retries, or self-healing is implemented.
-- Persistent/distributed job scheduling and evidence artifact storage remain pending. The current background worker pool is process-local and is not a durable queue. Local history stores normalized summaries only; the database is unencrypted and has no retention policy. Deterministic failure categorization is implemented but requires broader fixture validation.
-- Backend tests and frontend build passed on code commit `62d0fe7d63532d04da99714739b09c214a9dd01a`; see the Implementation Status for the exact workflow links.
+- Background execution is process-local, not a durable queue.
+- Local history stores normalized summaries only; the database is unencrypted and has no retention policy.
+- Artifact persistence is disabled by default. When enabled, JUnit report retention is best-effort and does not change test outcomes; API metadata/download access is scoped by execution ID. Backend tests and frontend build passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` (workflow runs #74 and #43). The Test Explorer shows links for artifacts in active and historical runs. Safe artifact metadata is persisted in SQLite; validation of this newest integration is pending.
+- Historical backend/frontend workflow links and exact commits are recorded in `IMPLEMENTATION_STATUS.md`; no CI pass is claimed for the newly added artifact module yet.
 
 ## Previous Foundation
 - Product vision and non-goals

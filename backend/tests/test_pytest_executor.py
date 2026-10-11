@@ -79,3 +79,26 @@ def test_junit_result_disambiguates_same_test_name_by_source_module(tmp_path):
 
     assert result[0].outcome is TestOutcome.PASSED
     assert result[0].duration_seconds == 0.4
+
+
+def test_executor_honors_cancellation_before_start(tmp_path):
+    from threading import Event
+    from aac.execution.contracts import TestOutcome
+
+    test = DiscoveredTest(
+        "pytest:cancel", "test_ok", "tests/test_ok.py", "python", "pytest", "test_ok",
+        metadata={"line": 1, "kind": "function"},
+    )
+    cancelled = Event()
+    cancelled.set()
+
+    result = PytestExecutor().execute(
+        "cancelled",
+        ExecutionTarget([test.id], str(tmp_path), "pytest"),
+        ExecutionPolicy(allow_side_effects=True),
+        [test],
+        cancel_event=cancelled,
+    )
+
+    assert result.status is ExecutionStatus.CANCELLED
+    assert result.results == []

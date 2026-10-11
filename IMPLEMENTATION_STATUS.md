@@ -29,9 +29,11 @@ Last updated: 2026-10-11
 - [x] Background execution API, bounded in-process lifecycle, status polling, and cancellation implemented
 - [x] Local SQLite execution history API and recent-runs UI added and validated on follow-up branch
 - [x] Initial local evidence artifact store module and unit tests added on `feat/evidence-artifact-retention`
-- [ ] Exact-head CI validation of artifact store and tests
-- [ ] Integration of artifact store with execution lifecycle and API endpoints
-- [ ] Persistent evidence artifacts available through Test Explorer
+- [x] Best-effort JUnit artifact retention wired into pytest execution when explicitly enabled
+- [x] Execution-scoped artifact metadata listing and safe download API endpoints added
+- [x] API tests for listing, download headers, execution scoping, and unknown execution
+- [ ] Exact-head CI validation of complete artifact integration
+- [ ] Persistent evidence artifact links available through Test Explorer
 - [ ] Additional framework adapters
 - [ ] AI analysis
 
@@ -39,7 +41,7 @@ Last updated: 2026-10-11
 
 The reconciled feature stack includes project/test discovery, adapter capability reporting, a React/TypeScript Test Explorer, explicitly authorized local pytest execution, deterministic failure categorization, local SQLite execution history, and a bounded in-process background worker with status polling and cancellation. These capabilities are spread across dependent open PRs and are not all merged into `main`.
 
-The new artifact-store branch adds an opt-in local storage module with generated artifact IDs, SHA-256 integrity checks, per-artifact size limits, age-based expiration, and oldest-first budget cleanup. Its initial unit tests have been added but exact-head CI has not yet been confirmed. The module is not yet connected to execution completion or exposed through API endpoints; do not claim the end-to-end artifact feature is complete.
+The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Exact-head CI is still running/not yet verified, and the Test Explorer does not yet surface artifact links.
 
 ## Validation Evidence
 
@@ -51,23 +53,23 @@ The new artifact-store branch adds an opt-in local storage module with generated
 - Persisted-history frontend build passed on the same commit: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
 - Background lifecycle/cancellation backend tests passed on PR #13 head `180b903d3fcd458b464b82730662aa21d7b2ab88` (41 tests): [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390381).
 - Background lifecycle frontend build passed on that PR #13 head: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390394).
-- Artifact-store tests are newly added; no exact-head workflow result is verified yet.
+- Backend CI for the initial artifact-store commit was observed running, but no exact-head result for the complete executor/API integration has been verified yet.
 
 ## Known Limitations
 
 - Framework detection and pytest collection normalization remain incomplete for dynamic collection and some fixtures/parametrization cases.
 - The in-process job queue loses active jobs/cancellation handles on backend restart.
 - Local history stores normalized summaries only; it is unencrypted and currently has no retention policy.
-- Artifact storage is not integrated into the execution lifecycle/API yet.
+- Artifact persistence is opt-in and wired to JUnit reports; the Test Explorer does not yet surface artifact links. Exact-head validation remains pending.
 - Only pytest is execution-capable; remote repository connectors, multi-user auth, and OS-level sandboxing are not implemented.
 - UI supports one selected test at a time; bulk selection and richer live progress are future work.
 
 ## Next Steps
 
 1. Integrate the dependent execution PR stack in order and validate the cumulative branch before merging.
-2. Validate the new artifact-store code on its exact head; fix failures before adding API wiring.
-3. Integrate safe artifact persistence into terminal execution, with bounded metadata and execution-scoped download endpoints.
-4. Add API lifecycle/scope tests and ensure evidence failures never overwrite test outcomes.
+2. Verify the complete artifact-store, executor, and API changes on the exact PR head; fix any CI failures.
+3. Add Test Explorer artifact links only after backend integration is validated.
+4. Add remaining artifact lifecycle tests (missing/corrupt files, partial writes, and cleanup edge cases).
 5. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.
 
 ## Tracking Rule

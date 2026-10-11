@@ -13,7 +13,7 @@ A framework-agnostic QA automation control plane. The current MVP discovers a lo
 - Deterministic failure categories displayed alongside failed results
 - Backend pytest and frontend build workflows in GitHub Actions
 
-The MVP does **not** yet include background runs/cancellation, evidence artifact storage, remote repository connections, additional execution adapters, or AI analysis. See [Implementation Status](IMPLEMENTATION_STATUS.md) and [Changelog](CHANGELOG.md).
+The MVP does **not** yet include durable/distributed job scheduling, evidence artifact storage, remote repository connections, additional execution adapters, or AI analysis. Authorized runs execute asynchronously in a bounded in-process worker pool and can be cancelled while active; a backend restart loses active job state. This is not a production job queue. See [Implementation Status](IMPLEMENTATION_STATUS.md) and [Changelog](CHANGELOG.md).
 
 ## Requirements
 
@@ -70,8 +70,9 @@ To point the frontend at another API URL, set `VITE_API_BASE_URL` before startin
 2. Select **Discover tests**.
 3. Select a discovered test to inspect its normalized metadata.
 4. To execute it, explicitly check the authorization box and choose **Run selected test**.
-5. Review the normalized status, failure category, and message.
-6. View recent runs in the Local Run History section.
+5. Monitor the asynchronous status; choose **Cancel run** to request cancellation while the run is active.
+6. Review the normalized status, failure category, and message.
+7. View recent runs in the Local Run History section.
 
 **Execution safety:** running a test may execute arbitrary code from that project. Only authorize projects you trust. The authorization checkbox is not an OS-level sandbox. Keep the API bound to localhost unless you have implemented appropriate network access controls and authentication.
 

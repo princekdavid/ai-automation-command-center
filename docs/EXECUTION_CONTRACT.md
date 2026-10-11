@@ -70,6 +70,16 @@ This milestone does not add:
 Remote execution, retries, scheduling, AI-generated execution, and self-healing require separate contracts, capability checks, security decisions, and validation.
 
 
+## Background execution lifecycle
+
+Authorized execution requests return `202 Accepted` with an execution ID. The in-process manager transitions jobs through `accepted`, `running`, and one terminal status: `passed`, `failed`, `error`, `cancelled`, or `rejected`. Poll `GET /api/v1/executions/{request_id}/status`; request cancellation with `POST /api/v1/executions/{request_id}/cancel`.
+
+- Cancellation is cooperative and local to the backend process. The pytest executor terminates its subprocess, waits briefly, then kills it if needed.
+- If a process has already completed, cancellation does not rewrite its terminal result.
+- The worker pool is bounded (two concurrent jobs by default); this is a local concurrency cap, not a distributed scheduler.
+- Active jobs live in process memory. Restarting the backend loses active cancellation handles; SQLite is history, not a durable queue. Do not deploy multiple workers or rely on this for production workloads yet.
+- Test code is not sandboxed. Only run explicitly authorized, trusted projects.
+
 ## Local execution history
 
 The current API stores a compact local SQLite record after each execution request, including rejected requests. The default database path is `~/.ai-automation-command-center/history.sqlite3`; set `AAC_RUN_DB_PATH` to choose another local path.

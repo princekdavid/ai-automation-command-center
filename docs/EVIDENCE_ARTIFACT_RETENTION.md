@@ -1,6 +1,6 @@
 # Evidence Artifact Storage and Retention (MVP)
 
-Status: integrated into pytest execution, API, and Test Explorer; backend tests and frontend build passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` ([backend run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856), [frontend run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878)).
+Status: integrated into pytest execution, API, SQLite history, and Test Explorer. The latest history-persistence changes have regression tests, but exact-head CI validation is pending. Earlier backend/frontend checks passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` ([backend run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856), [frontend run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878)).
 Branch: `feat/evidence-artifact-retention`
 Scope: local, single-user MVP only.
 
@@ -17,9 +17,10 @@ Scope: local, single-user MVP only.
 - `GET /api/v1/executions/{request_id}/artifacts` returns bounded metadata only.
 - `GET /api/v1/executions/{request_id}/artifacts/{artifact_id}` downloads bytes with attachment disposition, `nosniff`, and `no-store` headers.
 - API regression tests cover listing, download behavior, execution scoping, and unknown executions.
-- Test Explorer displays download links for artifacts retained during the active execution session.
-
-Artifact references are not yet persisted in execution history, so historical run cards do not yet provide artifact links.
+- Artifact references are persisted in SQLite history with an additive migration; existing rows receive an empty artifact list.
+- Only an allowlist of artifact ID, kind, size, digest, timestamp, and media type is persisted. Storage keys and filesystem paths are discarded.
+- Test Explorer displays download links on historical run cards when saved references are present.
+- Regression tests cover reference persistence, updates, legacy schema migration, and historical status response.
 
 ## Goals and safety boundaries
 
@@ -33,13 +34,11 @@ Keep compact normalized run summaries in the existing history store and artifact
 
 ## Remaining integration work
 
-1. Decide whether artifact references should be included in persisted run history and add that vertical slice if useful.
+1. Validate the newest history persistence and Test Explorer integration on the exact PR head.
 2. Add API tests for missing/expired artifacts and non-leaking errors.
 3. Add symlink/root-boundary, idempotent cleanup, missing-file, corrupt metadata, and partial-write tests where supported.
-4. Ensure API responses expose only opaque IDs and metadata, never storage keys or absolute paths.
-5. Add API tests for missing/expired artifacts and non-leaking errors.
-6. Add symlink/root-boundary, idempotent cleanup, missing-file, corrupt metadata, and partial-write tests where supported.
-7. Update status/changelog after validation.
+4. Keep API responses restricted to opaque IDs and approved metadata; never expose storage keys or absolute paths.
+5. Update status/changelog after validation.
 
 ## Definition of done
 

@@ -14,7 +14,7 @@ from aac.execution.contracts import (
     TestResult,
 )
 from aac.domain.models import DiscoveredTest
-from aac.execution.artifacts import ArtifactStoreError, LocalEvidenceArtifactStore
+from aac.execution.artifacts import LocalEvidenceArtifactStore
 
 
 class PytestExecutor:
@@ -132,7 +132,7 @@ class PytestExecutor:
                             request_id, "junit", report.read_bytes(), "application/xml"
                         )
                         metadata["artifacts"] = [artifact]
-                    except (ArtifactStoreError, OSError, ValueError):
+                    except Exception:
                         # Evidence retention is best-effort and must not change the
                         # test outcome or expose artifact-store internals to callers.
                         metadata["artifact_persistence"] = "unavailable"

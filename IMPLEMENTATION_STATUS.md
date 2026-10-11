@@ -33,7 +33,7 @@ Last updated: 2026-10-11
 - [x] Execution-scoped artifact metadata listing and safe download API endpoints added
 - [x] API tests for listing, download headers, execution scoping, and unknown execution
 - [x] Backend CI passed on exact source head `5d696b39bce1142e3e8e528df8e3f074aef4c50b`
-- [ ] Persistent evidence artifact links available through Test Explorer
+- [x] Persistent evidence artifact links surfaced in Test Explorer for the active execution session
 - [ ] Additional framework adapters
 - [ ] AI analysis
 
@@ -41,7 +41,7 @@ Last updated: 2026-10-11
 
 The reconciled feature stack includes project/test discovery, adapter capability reporting, a React/TypeScript Test Explorer, explicitly authorized local pytest execution, deterministic failure categorization, local SQLite execution history, and a bounded in-process background worker with status polling and cancellation. These capabilities are spread across dependent open PRs and are not all merged into `main`.
 
-The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on exact source head `5d696b39bce1142e3e8e528df8e3f074aef4c50b` in [workflow run #69](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162657430). The Test Explorer does not yet surface artifact links.
+The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` in [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856); frontend build passed on the same head in [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878). The Test Explorer shows artifact links for the active execution session; artifact references are not yet persisted into run history.
 
 ## Validation Evidence
 
@@ -53,21 +53,22 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 - Persisted-history frontend build passed on the same commit: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
 - Background lifecycle/cancellation backend tests passed on PR #13 head `180b903d3fcd458b464b82730662aa21d7b2ab88` (41 tests): [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390381).
 - Background lifecycle frontend build passed on that PR #13 head: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390394).
-- Backend CI passed on exact source head `5d696b39bce1142e3e8e528df8e3f074aef4c50b`, including artifact storage, executor integration, API endpoints, and regression tests: [workflow run #69](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162657430).
+- Backend tests passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb`, including artifact storage, executor integration, API endpoints, status metadata, and regression tests: [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856).
+- Frontend build passed on the same source head with artifact download links in Test Explorer: [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878).
 
 ## Known Limitations
 
 - Framework detection and pytest collection normalization remain incomplete for dynamic collection and some fixtures/parametrization cases.
 - The in-process job queue loses active jobs/cancellation handles on backend restart.
 - Local history stores normalized summaries only; it is unencrypted and currently has no retention policy.
-- Artifact persistence is opt-in and wired to JUnit reports; the Test Explorer does not yet surface artifact links. Exact-head validation remains pending.
+- Artifact persistence is opt-in and wired to JUnit reports. Active-session download links are surfaced in Test Explorer; history does not yet retain artifact references.
 - Only pytest is execution-capable; remote repository connectors, multi-user auth, and OS-level sandboxing are not implemented.
 - UI supports one selected test at a time; bulk selection and richer live progress are future work.
 
 ## Next Steps
 
 1. Integrate the dependent execution PR stack in order and validate the cumulative branch before merging.
-2. Add Test Explorer artifact links and validate the frontend build.
+2. Add artifact references to persisted run history if durable access from historical runs is needed.
 3. Add remaining artifact lifecycle tests (missing/corrupt files, partial writes, and cleanup edge cases).
 4. Add remaining artifact lifecycle tests (missing/corrupt files, partial writes, and cleanup edge cases).
 5. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.

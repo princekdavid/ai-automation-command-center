@@ -1,4 +1,5 @@
 import hashlib
+import sqlite3
 from datetime import datetime, timedelta, timezone
 
 import pytest
@@ -155,3 +156,26 @@ def test_cleanup_expires_metadata_even_when_artifact_file_is_missing(tmp_path) -
     assert store.cleanup() == 1
     assert store.get_metadata("run-orphan", metadata["artifact_id"]) is None
 
+
+
+
+def test_store_closes_all_database_connections(tmp_path, monkeypatch) -> None:
+    store = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=100,
+        max_total_bytes=200,
+    )
+    opened = []
+    original_connect = store._connect
+
+    def tracking_connect():
+        connection = original_connect()
+        opened.append(connection)
+        return connection
+
+    monkeypatch.setattr(store, "_connect", tracking_connect)
+    store.save("run-connections", "log", b"evidence")
+
+    assert opened
+    for connection in opened:
+        with pytest.raises(sqlite3.ProgrammingError, match="closed"):
+            connection.execute("SELECT 1")

@@ -45,20 +45,22 @@ PR #6 was closed as superseded by PR #9 because its stacked branch conflicted wi
 ## Current integration concerns
 
 - PR #9 is stacked on PR #5's feature branch; keep that dependency explicit during review.
-- PRs #2–#5 overlap heavily in backend files. Review each cumulative diff carefully; do not blindly merge multiple copies of the same implementation.
+- PRs #2, #3, #4, and #5 are competing, overlapping foundation branches all based on `main`; they are not a linear dependency chain. Their changed-file sets substantially overlap in the API, discovery service, domain models, adapters, and tests.
+- PR #5 is the intended canonical foundation for the current execution stack because PR #9 explicitly uses `feat/adapter-capabilities-ci-test-explorer` as its base and PR #5 adds the backend CI workflow/capability contract. Do not merge PRs #2–#4 sequentially on top of PR #5; that risks duplicate/conflicting implementations.
+- Keep PRs #2–#4 open for now rather than closing them automatically. Before integrating, compare their unique changes against PR #5, preserve any genuinely unique requirement, and then ask the repository owner to close redundant alternatives.
 - PR #9 reports clean mergeability against its feature base. Do not merge it into the feature branch/main until the intended base integration path is reviewed.
 - PR #8 also changes this status file. Reconcile the status document after code PRs are integrated so the default branch does not retain stale claims.
 - Do not mark the MVP complete until integration and review are resolved.
 
 ## Next actions
 
-1. Review the cumulative PR #2–#5 dependency chain and decide the intended merge sequence before merging any overlapping branches.
-2. Review PR #9's green backend/frontend checks and merge it only after its base branch is integrated coherently.
-3. Review PR #10 after PR #9 is integrated; it is stacked on PR #9 and must not be merged ahead of its base.
-4. Review PR #11 after PR #10 is integrated; it is stacked on PR #10 and must not be merged ahead of its base.
-5. Reconcile and merge this status-only PR after code integration so the default branch reflects what actually shipped.
-6. Continue with background run lifecycle/cancellation, evidence artifact storage, and broader validation of deterministic failure rules.
-7. Add another framework adapter only after the normalized discovery/execution contracts remain stable.
+1. Treat PR #5 as the canonical foundation for the current stack, subject to human review; compare PRs #2–#4 for unique changes, but do not merge all four sequentially.
+2. Once the owner reviews and integrates PR #5, review/integrate PR #9 against that exact foundation; rerun backend and frontend CI on the resulting cumulative head.
+3. Integrate PR #10 only after #9, then rerun both CI workflows.
+4. Integrate PR #11 only after #10, then rerun both CI workflows.
+5. Integrate PR #13 only after #11; it adds background execution/cancellation and its own tests, but its queue is process-local rather than durable.
+6. Reconcile and merge this status-only PR only after code integration so `main` reflects what actually shipped.
+7. Defer durable queue/evidence-artifact work until the integrated stack is stable; add another framework adapter only after the normalized contracts remain stable.
 
 ## Safety and completion rules
 

@@ -160,6 +160,7 @@ def get_execution_status(request_id: str) -> dict:
         "completed_at": record["completed_at"],
         "error": None,
         "results": record["results"],
+        "metadata": {"artifacts": record.get("artifacts", [])},
     }
 
 

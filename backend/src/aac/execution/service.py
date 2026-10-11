@@ -59,4 +59,5 @@ class ExecutionService:
             request.target,
             request.policy,
             discovered,
+            cancel_event=cancel_event,
         )

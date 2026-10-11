@@ -14,3 +14,7 @@ class TestDiscoveryService:
     def capabilities(self, project_path: str) -> list[AdapterCapability]:
         dna = self.discovery.discover(project_path)
         return self.registry.resolve(dna).capabilities()
+
+
+# This service is not a pytest test class despite its public name.
+TestDiscoveryService.__test__ = False

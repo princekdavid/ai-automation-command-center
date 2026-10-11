@@ -1,7 +1,8 @@
 import os
+import sqlite3
 from typing import Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from aac.discovery.service import DiscoveryService
@@ -9,6 +10,7 @@ from aac.discovery.test_service import TestDiscoveryService
 from aac.execution.contracts import ExecutionMode, ExecutionPolicy, ExecutionRequest, ExecutionTarget
 from aac.execution.service import ExecutionService
 from aac.analysis.failure_classifier import classify_failure
+from aac.execution.history import SQLiteExecutionHistoryStore
 
 app = FastAPI(title="AI Automation Command Center", version="0.1.0")
 # Local Vite development origins only by default. Deployments must configure explicit trusted origins.
@@ -30,6 +32,7 @@ app.add_middleware(
 discovery = DiscoveryService()
 test_discovery = TestDiscoveryService(discovery=discovery)
 execution_service = ExecutionService(discovery_service=discovery)
+history_store = SQLiteExecutionHistoryStore()
 
 class DiscoverRequest(BaseModel):
     project_path: str
@@ -97,8 +100,15 @@ def execute(request: ExecuteRequest) -> dict:
         result = execution_service.execute(execution)
     except (ValueError, LookupError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    history_saved = True
+    try:
+        history_store.save(execution, result)
+    except (OSError, sqlite3.Error):
+        # The execution result is still returned if local history storage is unavailable.
+        history_saved = False
     return {
         "request_id": result.request_id,
+        "history_saved": history_saved,
         "status": result.status.value,
         "results": [
             {
@@ -118,6 +128,26 @@ def execute(request: ExecuteRequest) -> dict:
         "error": result.error,
         "metadata": result.metadata,
     }
+
+
+@app.get("/api/v1/executions")
+def list_executions(limit: int = Query(default=20, ge=1, le=100)) -> dict:
+    try:
+        executions = history_store.list_recent(limit)
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(status_code=503, detail="Execution history is unavailable") from exc
+    return {"count": len(executions), "executions": executions}
+
+
+@app.get("/api/v1/executions/{request_id}")
+def get_execution(request_id: str) -> dict:
+    try:
+        execution = history_store.get(request_id)
+    except (OSError, sqlite3.Error) as exc:
+        raise HTTPException(status_code=503, detail="Execution history is unavailable") from exc
+    if execution is None:
+        raise HTTPException(status_code=404, detail="Execution history record not found")
+    return execution
 
 
 @app.post("/api/v1/analysis/failures")

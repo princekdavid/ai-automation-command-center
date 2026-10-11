@@ -6,6 +6,7 @@ keeps normalized status/history, but is not a durable queue or multi-worker brok
 from __future__ import annotations
 
 from concurrent.futures import Future, ThreadPoolExecutor
+import sqlite3
 from threading import Event, RLock
 from typing import Any
 
@@ -55,6 +56,9 @@ class ExecutionJobManager:
         with self._lock:
             if request.request_id in self._jobs:
                 raise ValueError("Duplicate execution request ID")
+            # Persist acceptance before exposing/scheduling the job; a storage error
+            # must not leave an orphaned in-memory job with no worker.
+            self._history.save(request, accepted)
             self._jobs[request.request_id] = {
                 "request": request,
                 "result": accepted,
@@ -62,7 +66,6 @@ class ExecutionJobManager:
                 "cancel_requested": False,
                 "future": None,
             }
-            self._history.save(request, accepted)
             future = self._pool.submit(self._run, request.request_id)
             self._jobs[request.request_id]["future"] = future
         return accepted
@@ -78,11 +81,11 @@ class ExecutionJobManager:
                     error="Execution cancelled before it started",
                 )
                 job["result"] = result
-                self._history.save(request, result)
+                self._save_best_effort(request, result)
                 return
             running = ExecutionResult(request_id, ExecutionStatus.RUNNING)
             job["result"] = running
-            self._history.save(request, running)
+            self._save_best_effort(request, running)
 
         try:
             result = self._service.execute(request, cancel_event=cancel_event)
@@ -99,7 +102,14 @@ class ExecutionJobManager:
             if job["cancel_event"].is_set() and result.status not in _TERMINAL:
                 result = ExecutionResult(request_id, ExecutionStatus.CANCELLED, error="Execution cancelled")
             job["result"] = result
+            self._save_best_effort(request, result)
+
+    def _save_best_effort(self, request: ExecutionRequest, result: ExecutionResult) -> None:
+        try:
             self._history.save(request, result)
+        except (OSError, sqlite3.Error):
+            # The active job remains observable in memory even if history storage fails.
+            pass
 
     def get(self, request_id: str) -> dict[str, Any] | None:
         with self._lock:
@@ -142,5 +152,5 @@ class ExecutionJobManager:
                     error="Execution cancelled before it started",
                 )
                 job["result"] = cancelled
-                self._history.save(job["request"], cancelled)
+                self._save_best_effort(job["request"], cancelled)
             return self.get(request_id)

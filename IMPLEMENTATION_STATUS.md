@@ -35,7 +35,7 @@ Last updated: 2026-10-11
 - [x] Backend CI passed on exact source head `5d696b39bce1142e3e8e528df8e3f074aef4c50b`
 - [x] Persistent evidence artifact links surfaced in Test Explorer for active and historical executions
 - [x] SQLite history migration and safe artifact-reference persistence tests added
-- [ ] Exact-head CI validation of historical artifact persistence and UI integration
+- [ ] Exact-head CI validation of historical artifact persistence, UI integration, and newest missing/symlink/expired-artifact regression tests
 - [ ] Additional framework adapters
 - [ ] AI analysis
 
@@ -43,7 +43,7 @@ Last updated: 2026-10-11
 
 The reconciled feature stack includes project/test discovery, adapter capability reporting, a React/TypeScript Test Explorer, explicitly authorized local pytest execution, deterministic failure categorization, local SQLite execution history, and a bounded in-process background worker with status polling and cancellation. These capabilities are spread across dependent open PRs and are not all merged into `main`.
 
-The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` in [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856); frontend build passed on the same head in [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878). Artifact references are now included in SQLite history using an additive schema migration and an allowlist of safe metadata fields. The Test Explorer renders links on recent historical runs. Tests for persistence, legacy database migration, and historical status API are added; validation of these newest changes is pending.
+The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on source head `014649e0616d72b40957928ee2fb397d74ff43fb` in [workflow run #74](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755856); frontend build passed on the same head in [workflow run #43](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162755878). Artifact references are now included in SQLite history using an additive schema migration and an allowlist of safe metadata fields. The Test Explorer renders links on recent historical runs. Tests cover safe metadata persistence, legacy database migration, historical status API, missing files, symlinked artifact files, cleanup with missing files, and downloads after expiry. The latest test additions are committed at `ad965c4013f4b3d720d209ef8bb1a1c1449f2a6f`; no CI run has been observed for this exact head, so these tests remain unvalidated.
 
 ## Validation Evidence
 
@@ -71,8 +71,8 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 
 1. Integrate the dependent execution PR stack in order and validate the cumulative branch before merging.
 2. Validate persisted artifact references and the historical-run UI on the latest exact head.
-3. Add remaining artifact lifecycle tests (missing/corrupt files, partial writes, and cleanup edge cases).
-5. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.
+3. Validate the newest artifact lifecycle regression tests on the exact current head.
+4. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.
 
 ## Tracking Rule
 

@@ -78,7 +78,7 @@ def test_authentication_network_and_setup_rules(message, expected_category) -> N
             "connection reset",
         ),
         (
-            "pytest: fixture 'db_session' setup failed",
+            "pytest: fixture 'db_session' could not be initialized",
             FailureCategory.TEST_SETUP,
             "fixture '",
         ),

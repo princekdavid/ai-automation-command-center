@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import os
 import sqlite3
+import stat
 import uuid
 from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
@@ -204,11 +205,28 @@ class LocalEvidenceArtifactStore:
             raise ArtifactNotFoundError("artifact not found")
         target = root / row["storage_key"]
         try:
+            # Path checks alone are vulnerable to a leaf being swapped for a
+            # symlink between validation and read. Open without following a
+            # symlink where the platform supports O_NOFOLLOW, then validate the
+            # opened file descriptor itself before reading any evidence bytes.
             if target.is_symlink() or target.resolve(strict=True).parent != root:
                 raise ArtifactNotFoundError("artifact not found")
-            content = target.read_bytes()
+            flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(target, flags)
+            try:
+                file_stat = os.fstat(descriptor)
+                if not stat.S_ISREG(file_stat.st_mode):
+                    raise ArtifactNotFoundError("artifact not found")
+                with os.fdopen(descriptor, "rb") as stream:
+                    descriptor = -1
+                    content = stream.read(self.max_artifact_bytes + 1)
+            finally:
+                if descriptor >= 0:
+                    os.close(descriptor)
         except (OSError, ValueError) as exc:
             raise ArtifactNotFoundError("artifact not found") from exc
+        if len(content) > self.max_artifact_bytes:
+            raise ArtifactNotFoundError("artifact not found")
         if len(content) != metadata["byte_size"] or hashlib.sha256(content).hexdigest() != metadata["sha256"]:
             raise ArtifactNotFoundError("artifact not found")
         return metadata, content

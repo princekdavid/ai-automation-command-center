@@ -159,6 +159,20 @@ def test_cleanup_expires_metadata_even_when_artifact_file_is_missing(tmp_path) -
 
 
 
+def test_non_regular_artifact_path_is_not_returned(tmp_path) -> None:
+    store = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=100,
+        max_total_bytes=200,
+    )
+    metadata = store.save("run-directory", "log", b"evidence")
+    artifact_path = tmp_path / "artifacts" / f"{metadata['artifact_id']}.bin"
+    artifact_path.unlink()
+    artifact_path.mkdir()
+
+    with pytest.raises(ArtifactNotFoundError):
+        store.read("run-directory", metadata["artifact_id"])
+
+
 def test_store_closes_all_database_connections(tmp_path, monkeypatch) -> None:
     store = LocalEvidenceArtifactStore(
         tmp_path / "artifacts", enabled=True, max_artifact_bytes=100,

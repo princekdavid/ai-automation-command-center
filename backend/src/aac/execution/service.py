@@ -14,7 +14,7 @@ class ExecutionService:
         self.registry = registry or AdapterRegistry()
         self.executors = executors or {"pytest": PytestExecutor()}
 
-    def execute(self, request: ExecutionRequest) -> ExecutionResult:
+    def execute(self, request: ExecutionRequest, cancel_event=None) -> ExecutionResult:
         if not request.policy.allow_side_effects:
             return ExecutionResult(
                 request.request_id,

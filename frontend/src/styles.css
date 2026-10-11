@@ -32,3 +32,10 @@
 
 button.secondary{background:#fff;color:#334155;border:1px solid #cbd5e1}
 button.secondary:hover{background:#f8fafc}
+
+
+.artifact-list{display:grid;gap:8px;padding-top:8px;border-top:1px solid #e3e8ef}
+.artifact-list>strong{font-size:12px}
+.artifact-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:11px;color:#526178}
+.artifact-row a{color:#1d4ed8;text-decoration:none;font-weight:700}
+.artifact-row a:hover{text-decoration:underline}

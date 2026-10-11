@@ -12,7 +12,7 @@ All notable project changes should be recorded here.
 - Background execution lifecycle, status polling, cooperative cancellation, and bounded in-process workers.
 - Opt-in local evidence artifact storage with generated IDs, execution-scoped reads, size/age/total-budget limits, SHA-256 integrity verification, and download API.
 - Test Explorer links to evidence artifacts on historical run records.
-- Backend and frontend CI workflows.
+- Regression coverage for symlinked artifact roots and corrupted storage keys that attempt to escape the artifact root.
 - Documentation of cumulative integration state and local-only security boundaries.
 
 ### Security and limitations
@@ -21,4 +21,4 @@ All notable project changes should be recorded here.
 - Running a test may execute arbitrary project code; the UI authorization checkbox is not a sandbox.
 - Artifact retention is disabled by default. Evidence and history can contain sensitive data; history is unencrypted and has no retention policy.
 - No remote execution, multi-user authorization, cloud artifact storage, AI analysis, self-healing, auto-merge, or deployment is implemented.
-- PR #17 backend [workflow #38164557651](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164557651) and frontend [workflow #38164557644](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164557644) passed on reviewed code head `cc9e8aebb3b8a6f608100fe66ca733d613096488`. Subsequent test or code changes must be revalidated on their own head.
+- Backend [workflow #38164963695](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963695) and frontend [workflow #38164963727](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963727) passed on code/test head `1c9cc80ad02558567cb82165beef7b3f9198dc61`. A later documentation-only follow-up preserves that validated code/test tree.

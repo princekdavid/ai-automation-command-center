@@ -6,11 +6,12 @@ Last updated: 2026-10-12
 
 - **Pull request:** [#17 — cumulative integration candidate](https://github.com/princekdavid/ai-automation-command-center/pull/17)
 - **Branch:** `integration/evidence-retention-on-current-stack`
-- **Current reviewed code head:** `cc9e8aebb3b8a6f608100fe66ca733d613096488` before this documentation/test-hardening commit
+- **Latest code/test head validated:** `1c9cc80ad02558567cb82165beef7b3f9198dc61`
 - **State:** draft, open, not merged
-- **Validated at reviewed head:** backend workflow [#38164557651](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164557651) and frontend workflow [#38164557644](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164557644) both passed
+- **Backend:** [workflow #38164963695](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963695) passed on that code/test head
+- **Frontend:** [workflow #38164963727](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963727) passed on that code/test head
 
-This candidate combines deterministic failure analysis, SQLite execution history, background execution lifecycle/cancellation, and opt-in bounded evidence artifact retention. This is a validated draft candidate, not a release or deployment.
+This candidate combines deterministic failure analysis, SQLite execution history, background execution lifecycle/cancellation, and opt-in bounded evidence artifact retention. It is a validated draft candidate, not a release or deployment. Later documentation-only commits do not change the validated code/test tree.
 
 ## Implemented in the cumulative candidate
 
@@ -24,7 +25,8 @@ This candidate combines deterministic failure analysis, SQLite execution history
 - [x] Background job status, cooperative cancellation, and bounded in-process worker pool
 - [x] Opt-in local evidence artifacts, generated IDs, execution scoping, size/age/budget limits, and SHA-256 integrity checks
 - [x] Artifact listing/download API and historical Test Explorer references
-- [x] Backend tests and frontend build passed on PR #17's reviewed code head
+- [x] Regression tests for symlinked artifact roots and corrupted storage keys escaping the artifact root
+- [x] Backend tests and frontend build passed on the latest code/test head above
 
 ## Security and operating boundaries
 
@@ -37,10 +39,10 @@ This candidate combines deterministic failure analysis, SQLite execution history
 
 ## Remaining work
 
-1. Review the new path-boundary regression tests and rerun backend/frontend CI on the resulting PR head.
-2. Continue production-hardening review, especially API authentication/network controls before any non-local deployment.
-3. Consider tighter permission handling for pre-existing artifact directories/database files and history retention policy.
-4. Reconcile the original stacked PRs only after the cumulative candidate is reviewed; do not merge them automatically.
+1. Continue production-hardening review, especially API authentication/network controls before any non-local deployment.
+2. Consider tighter permission handling for pre-existing artifact directories/database files and a history retention policy.
+3. Continue evaluating concurrent cleanup behavior and filesystem race conditions.
+4. Reconcile original stacked PRs only after the cumulative candidate is reviewed; do not merge them automatically.
 5. Add additional framework adapters only after the normalized contracts stabilize.
 
 ## Integration dependency and PR policy
@@ -49,6 +51,6 @@ The original feature stack was developed as `#5 → #9 → #10 → #11 → #13 �
 
 - [PR #15](https://github.com/princekdavid/ai-automation-command-center/pull/15): history integrated onto latest failure-analysis branch; CI passed at its reviewed head.
 - [PR #16](https://github.com/princekdavid/ai-automation-command-center/pull/16): background lifecycle on validated history; CI passed at its reviewed head.
-- [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17): cumulative evidence-retention candidate; CI passed at its reviewed code head.
+- [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17): cumulative evidence-retention candidate; backend and frontend CI passed on code/test head `1c9cc80ad02558567cb82165beef7b3f9198dc61`.
 
 Keep PRs #11, #13, #14 and integration PRs #15–#17 open/unmerged until review and dependency reconciliation are complete. Never merge, deploy, change `main`, or add paid services/secrets without an explicit separate decision.

@@ -1,6 +1,6 @@
 # Evidence Artifact Storage and Retention
 
-Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Backend and frontend CI passed on reviewed code head `cc9e8aebb3b8a6f608100fe66ca733d613096488`: [backend workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164557651), [frontend workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164557644). Any subsequent code/test change requires fresh CI validation.
+Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Backend [workflow #38164963695](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963695) and frontend [workflow #38164963727](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38164963727) passed on code/test head `1c9cc80ad02558567cb82165beef7b3f9198dc61`. A subsequent documentation-only commit does not change the validated code/test tree.
 
 ## Implemented
 
@@ -15,7 +15,7 @@ Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid
 - `GET /api/v1/executions/{request_id}/artifacts/{artifact_id}` downloads bytes with attachment disposition, `nosniff`, and `no-store` headers.
 - Artifact references are persisted in SQLite history using an additive migration and an allowlist that excludes storage keys and absolute paths.
 - Test Explorer displays links for retained evidence on historical runs.
-- Regression tests cover disabled-by-default behavior, round-trip/digest checks, execution scoping, size rejection, age/budget expiry, tampering, missing files, symlinked leaf files, connection closure, API scoping, and history migration.
+- Regression tests cover disabled-by-default behavior, round-trip/digest checks, execution scoping, size rejection, age/budget expiry, tampering, missing files, symlinked leaf files and roots, connection closure, corrupted storage-key path escape, API scoping, and history migration.
 
 ## Security boundaries
 
@@ -27,6 +27,5 @@ Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid
 
 ## Review follow-ups
 
-- Added explicit regression coverage for a symlinked artifact root and a corrupted storage key attempting to escape the root; validate these tests on the updated PR head.
 - Continue evaluating concurrent cleanup behavior and filesystem race conditions as part of production hardening.
 - Keep API responses restricted to opaque IDs and approved metadata; never expose storage keys or absolute paths.

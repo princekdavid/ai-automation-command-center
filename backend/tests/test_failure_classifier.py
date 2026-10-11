@@ -80,7 +80,7 @@ def test_authentication_network_and_setup_rules(message, expected_category) -> N
         (
             "pytest: fixture 'db_session' setup failed",
             FailureCategory.TEST_SETUP,
-            "fixture ' ",
+            "fixture '",
         ),
         (
             "AssertionError: expected total 12, actual total 10; values do not equal",

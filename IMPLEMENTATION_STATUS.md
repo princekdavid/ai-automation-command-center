@@ -32,7 +32,7 @@ Last updated: 2026-10-11
 - [x] Best-effort JUnit artifact retention wired into pytest execution when explicitly enabled
 - [x] Execution-scoped artifact metadata listing and safe download API endpoints added
 - [x] API tests for listing, download headers, execution scoping, and unknown execution
-- [ ] Exact-head CI validation of complete artifact integration
+- [x] Backend CI passed on exact source head `5d696b39bce1142e3e8e528df8e3f074aef4c50b`
 - [ ] Persistent evidence artifact links available through Test Explorer
 - [ ] Additional framework adapters
 - [ ] AI analysis
@@ -41,7 +41,7 @@ Last updated: 2026-10-11
 
 The reconciled feature stack includes project/test discovery, adapter capability reporting, a React/TypeScript Test Explorer, explicitly authorized local pytest execution, deterministic failure categorization, local SQLite execution history, and a bounded in-process background worker with status polling and cancellation. These capabilities are spread across dependent open PRs and are not all merged into `main`.
 
-The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Exact-head CI is still running/not yet verified, and the Test Explorer does not yet surface artifact links.
+The artifact-store branch now includes opt-in local storage with generated IDs, SHA-256 checks, per-artifact and total-storage limits, age-based expiration, and oldest-first cleanup. Pytest execution attempts best-effort JUnit retention when enabled; storage failures do not replace the test outcome. Execution-scoped list/download API endpoints and regression tests are added. Backend tests passed on exact source head `5d696b39bce1142e3e8e528df8e3f074aef4c50b` in [workflow run #69](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162657430). The Test Explorer does not yet surface artifact links.
 
 ## Validation Evidence
 
@@ -53,7 +53,7 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 - Persisted-history frontend build passed on the same commit: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
 - Background lifecycle/cancellation backend tests passed on PR #13 head `180b903d3fcd458b464b82730662aa21d7b2ab88` (41 tests): [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390381).
 - Background lifecycle frontend build passed on that PR #13 head: [workflow](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38161390394).
-- Backend CI for the initial artifact-store commit was observed running, but no exact-head result for the complete executor/API integration has been verified yet.
+- Backend CI passed on exact source head `5d696b39bce1142e3e8e528df8e3f074aef4c50b`, including artifact storage, executor integration, API endpoints, and regression tests: [workflow run #69](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38162657430).
 
 ## Known Limitations
 
@@ -67,8 +67,8 @@ The artifact-store branch now includes opt-in local storage with generated IDs, 
 ## Next Steps
 
 1. Integrate the dependent execution PR stack in order and validate the cumulative branch before merging.
-2. Verify the complete artifact-store, executor, and API changes on the exact PR head; fix any CI failures.
-3. Add Test Explorer artifact links only after backend integration is validated.
+2. Add Test Explorer artifact links and validate the frontend build.
+3. Add remaining artifact lifecycle tests (missing/corrupt files, partial writes, and cleanup edge cases).
 4. Add remaining artifact lifecycle tests (missing/corrupt files, partial writes, and cleanup edge cases).
 5. Broaden deterministic failure fixtures, then stabilize normalized contracts before another adapter.
 

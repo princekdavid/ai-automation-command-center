@@ -134,7 +134,7 @@ class SQLiteExecutionHistoryStore:
             row = connection.execute(
                 """
                 SELECT request_id, project_path, runner, status, created_at,
-                       started_at, completed_at, results_json
+                       started_at, completed_at, results_json, artifact_refs_json
                 FROM execution_history
                 WHERE request_id = ?
                 """,

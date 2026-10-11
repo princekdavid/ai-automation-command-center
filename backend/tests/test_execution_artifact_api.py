@@ -106,3 +106,47 @@ def test_status_for_completed_historical_run_includes_artifacts(tmp_path, monkey
     response = TestClient(app).get("/api/v1/executions/historic-run/status")
     assert response.status_code == 200
     assert response.json()["metadata"]["artifacts"][0]["artifact_id"] == "report-id"
+
+
+def test_download_returns_not_found_when_artifact_file_is_missing(tmp_path, monkeypatch):
+    history = SQLiteExecutionHistoryStore(tmp_path / "history.sqlite3")
+    _seed_execution(history, "run-missing-file")
+    artifacts = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=1024,
+        max_total_bytes=4096,
+    )
+    saved = artifacts.save("run-missing-file", "junit", b"<testsuite/>")
+    (tmp_path / "artifacts" / f"{saved['artifact_id']}.bin").unlink()
+    monkeypatch.setattr("aac.api.history_store", history)
+    monkeypatch.setattr("aac.api.artifact_store", artifacts)
+
+    response = TestClient(app).get(
+        f"/api/v1/executions/run-missing-file/artifacts/{saved['artifact_id']}"
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Evidence artifact not found"
+
+
+def test_download_returns_not_found_after_retention_expiry(tmp_path, monkeypatch):
+    history = SQLiteExecutionHistoryStore(tmp_path / "history.sqlite3")
+    _seed_execution(history, "run-expired")
+    artifacts = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=1024,
+        max_total_bytes=4096, retention_days=1,
+    )
+    saved = artifacts.save("run-expired", "junit", b"<testsuite/>")
+    with artifacts._connect() as connection:
+        connection.execute(
+            "UPDATE artifacts SET expired = 1 WHERE artifact_id = ?",
+            (saved["artifact_id"],),
+        )
+    monkeypatch.setattr("aac.api.history_store", history)
+    monkeypatch.setattr("aac.api.artifact_store", artifacts)
+
+    response = TestClient(app).get(
+        f"/api/v1/executions/run-expired/artifacts/{saved['artifact_id']}"
+    )
+
+    assert response.status_code == 404
+

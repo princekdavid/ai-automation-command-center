@@ -14,12 +14,16 @@ from aac.execution.contracts import (
     TestResult,
 )
 from aac.domain.models import DiscoveredTest
+from aac.execution.artifacts import LocalEvidenceArtifactStore
 
 
 class PytestExecutor:
     """Controlled local pytest executor with timeout and cooperative cancellation."""
 
     runner = "pytest"
+
+    def __init__(self, artifact_store: LocalEvidenceArtifactStore | None = None) -> None:
+        self.artifact_store = artifact_store or LocalEvidenceArtifactStore()
 
     def execute(
         self,
@@ -121,8 +125,19 @@ class PytestExecutor:
                 results = self._parse_junit(report, selected)
                 status = ExecutionStatus.PASSED if process.returncode == 0 else ExecutionStatus.FAILED
                 error = None if process.returncode == 0 else (stderr_tail or stdout_tail)[-4000:]
+                metadata = {}
+                if self.artifact_store.enabled and report.is_file():
+                    try:
+                        artifact = self.artifact_store.save(
+                            request_id, "junit", report.read_bytes(), "application/xml"
+                        )
+                        metadata["artifacts"] = [artifact]
+                    except Exception:
+                        # Evidence retention is best-effort and must not change the
+                        # test outcome or expose artifact-store internals to callers.
+                        metadata["artifact_persistence"] = "unavailable"
                 return ExecutionResult(
-                    request_id, status, results, str(started), completed_at, error
+                    request_id, status, results, str(started), completed_at, error, metadata
                 )
 
     def _parse_junit(self, report: Path, selected: list[DiscoveredTest | None]) -> list[TestResult]:

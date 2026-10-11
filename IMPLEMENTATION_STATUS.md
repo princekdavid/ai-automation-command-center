@@ -75,3 +75,7 @@ Discovery skips common generated/virtual-environment directories and symlinks, c
 
 Update this file after every meaningful implementation milestone. Never mark functionality complete without validation.
 \n\n## Current Integration Follow-up (2026-10-12)\n\nA dedicated integration branch, `integration/execution-history-on-latest-failure-analysis`, has been created from the latest PR #10 head (`1aaa61d0e4077a2438ae0dcd71801449ade67a33`). The history store, its unit tests, pytest collection guard fixes, API endpoints, API tests, Test Explorer history UI, and history styles have been applied to that branch. This combined branch has not yet passed CI; do not treat the cumulative feature stack as ready to merge. PRs #11, #13, and #14 remain unmerged until the combined branch and downstream dependencies are validated.\n
+
+## Cumulative Integration Candidate (2026-10-12)
+
+The branch `integration/evidence-retention-on-current-stack` combines failure analysis, execution history, background lifecycle/cancellation, and bounded evidence retention. This cumulative branch requires its own CI run; earlier successful workflows validate only their respective earlier heads. Keep this candidate and the dependency PRs unmerged until backend and frontend workflows pass on this exact candidate.

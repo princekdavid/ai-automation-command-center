@@ -159,6 +159,36 @@ def test_cleanup_expires_metadata_even_when_artifact_file_is_missing(tmp_path) -
 
 
 
+def test_database_symlink_is_rejected_without_opening_target(tmp_path) -> None:
+    root = tmp_path / "artifacts"
+    root.mkdir()
+    external_db = tmp_path / "outside.sqlite3"
+    external_db.write_bytes(b"must remain untouched")
+    (root / "artifacts.sqlite3").symlink_to(external_db)
+
+    store = LocalEvidenceArtifactStore(root, enabled=True)
+
+    with pytest.raises(ArtifactStoreError, match="must not be symlinks"):
+        store.save("run-1", "log", b"evidence")
+    assert external_db.read_bytes() == b"must remain untouched"
+
+
+def test_store_applies_restrictive_permissions_on_posix(tmp_path) -> None:
+    import os
+    import stat
+
+    if os.name != "posix":
+        pytest.skip("POSIX permission bits are not portable")
+
+    root = tmp_path / "artifacts"
+    root.mkdir(mode=0o777)
+    store = LocalEvidenceArtifactStore(root, enabled=True)
+    store.save("run-1", "log", b"evidence")
+
+    assert stat.S_IMODE(root.stat().st_mode) == 0o700
+    assert stat.S_IMODE((root / "artifacts.sqlite3").stat().st_mode) == 0o600
+
+
 def test_non_regular_artifact_path_is_not_returned(tmp_path) -> None:
     store = LocalEvidenceArtifactStore(
         tmp_path / "artifacts", enabled=True, max_artifact_bytes=100,

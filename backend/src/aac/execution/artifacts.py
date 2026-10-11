@@ -96,8 +96,25 @@ class LocalEvidenceArtifactStore:
 
     def _connect(self) -> sqlite3.Connection:
         self.root.mkdir(parents=True, exist_ok=True, mode=0o700)
+        # Never let SQLite follow a pre-existing symlink for either the store
+        # directory or database. These checks are defense in depth for a
+        # dedicated local store; they do not protect against a hostile process
+        # running as the same OS user.
+        if self.root.is_symlink() or self.database_path.is_symlink():
+            raise ArtifactStoreError("artifact root and database must not be symlinks")
+        try:
+            os.chmod(self.root, 0o700)
+        except OSError:
+            # Some platforms/filesystems do not support POSIX permission bits.
+            pass
         connection = sqlite3.connect(self.database_path, timeout=5)
         connection.row_factory = sqlite3.Row
+        try:
+            os.chmod(self.database_path, 0o600)
+        except OSError:
+            # Keep the store usable where chmod is unsupported; document the
+            # host filesystem as part of the local trust boundary.
+            pass
         return connection
 
     def save(

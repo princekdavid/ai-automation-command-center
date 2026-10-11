@@ -12,7 +12,7 @@ All notable project changes should be recorded here.
 - Background execution lifecycle, status polling, cooperative cancellation, and bounded in-process workers.
 - Opt-in local evidence artifact storage with generated IDs, execution-scoped reads, size/age/total-budget limits, SHA-256 integrity verification, and download API.
 - Test Explorer links to evidence artifacts on historical run records.
-- Regression coverage for symlinked artifact roots and corrupted storage keys that attempt to escape the artifact root.
+- Regression coverage for artifact path escapes, symlinks, non-regular files, and restrictive directory/database permissions where supported.
 - Documentation of cumulative integration state and local-only security boundaries.
 
 ### Security and limitations
@@ -21,4 +21,4 @@ All notable project changes should be recorded here.
 - Running a test may execute arbitrary project code; the UI authorization checkbox is not a sandbox.
 - Artifact retention is disabled by default. Evidence and history can contain sensitive data; history is unencrypted and has no retention policy.
 - No remote execution, multi-user authorization, cloud artifact storage, AI analysis, self-healing, auto-merge, or deployment is implemented.
-- Backend [workflow #38165835764](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835764) and frontend [workflow #38165835799](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38165835799) passed on code/test head `519043de82aeea90449738a17152b005bf87366b`. The artifact tests now use the store's closing connection context manager for database updates.
+- Prior artifact read hardening passed backend [workflow #38170736828](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736828) and frontend [workflow #38170736823](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736823). Current database symlink/permission hardening is pending CI.

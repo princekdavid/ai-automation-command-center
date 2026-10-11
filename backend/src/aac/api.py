@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from aac.discovery.service import DiscoveryService
 from aac.discovery.test_service import TestDiscoveryService
-from aac.execution.contracts import ExecutionMode, ExecutionPolicy, ExecutionRequest, ExecutionTarget
+from aac.execution.contracts import ExecutionMode, ExecutionPolicy, ExecutionRequest, ExecutionStatus, ExecutionTarget
 from aac.execution.service import ExecutionService
 from aac.analysis.failure_classifier import classify_failure
 from aac.execution.history import SQLiteExecutionHistoryStore
@@ -101,13 +101,14 @@ def execute(request: ExecuteRequest):
     )
     if not request.authorize_execution:
         result = execution_service.execute(execution)
+        history_saved = True
         try:
             history_store.save(execution, result)
         except (OSError, sqlite3.Error):
-            pass
+            history_saved = False
         return {
             "request_id": result.request_id,
-            "history_saved": False,
+            "history_saved": history_saved,
             "status": result.status.value,
             "results": [],
             "started_at": result.started_at,

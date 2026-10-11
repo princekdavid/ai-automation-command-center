@@ -29,3 +29,6 @@
 .history-categories{display:flex;gap:6px;flex-wrap:wrap}
 .history-categories span{font-size:11px;text-transform:capitalize;background:#fff7ed;color:#9a3412;padding:4px 7px;border-radius:6px}
 .history-path{overflow-wrap:anywhere}
+
+button.secondary{background:#fff;color:#334155;border:1px solid #cbd5e1}
+button.secondary:hover{background:#f8fafc}

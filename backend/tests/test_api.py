@@ -138,3 +138,48 @@ def test_execution_history_api_persists_and_retrieves_summary(tmp_path, monkeypa
     detail = client.get(f"/api/v1/executions/{body['request_id']}")
     assert detail.status_code == 200
     assert detail.json()["status"] == "rejected"
+
+
+def test_authorized_execution_is_accepted_then_status_becomes_terminal(tmp_path, monkeypatch) -> None:
+    import time
+
+    from aac.execution.contracts import ExecutionResult, ExecutionStatus
+    from aac.execution.jobs import ExecutionJobManager
+
+    class ImmediateService:
+        def execute(self, request, cancel_event=None):
+            return ExecutionResult(request.request_id, ExecutionStatus.PASSED)
+
+    store = SQLiteExecutionHistoryStore(tmp_path / "background-history.sqlite3")
+    manager = ExecutionJobManager(ImmediateService(), store, max_workers=1)
+    monkeypatch.setattr("aac.api.history_store", store)
+    monkeypatch.setattr("aac.api.job_manager", manager)
+    client = TestClient(app)
+
+    accepted = client.post(
+        "/api/v1/executions",
+        json={
+            "project_path": str(tmp_path),
+            "runner": "pytest",
+            "test_ids": ["pytest:sample"],
+            "authorize_execution": True,
+        },
+    )
+
+    assert accepted.status_code == 202
+    assert accepted.json()["status"] == "accepted"
+    request_id = accepted.json()["request_id"]
+
+    deadline = time.monotonic() + 2
+    snapshot = None
+    while time.monotonic() < deadline:
+        response = client.get(f"/api/v1/executions/{request_id}/status")
+        assert response.status_code == 200
+        snapshot = response.json()
+        if snapshot["status"] == "passed":
+            break
+        time.sleep(0.01)
+
+    assert snapshot is not None
+    assert snapshot["status"] == "passed"
+    assert client.get(f"/api/v1/executions/{request_id}").json()["status"] == "passed"

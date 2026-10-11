@@ -54,65 +54,76 @@ class PytestExecutor:
         with tempfile.TemporaryDirectory(prefix="aac-pytest-") as temp_dir:
             report = Path(temp_dir) / "results.xml"
             command = ["pytest", "-q", f"--junitxml={report}", *nodeids]
-            try:
-                process = subprocess.Popen(
-                    command,
-                    cwd=root,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    text=True,
-                )
-            except OSError:
-                return ExecutionResult(
-                    request_id, ExecutionStatus.ERROR,
-                    started_at=str(started), completed_at=str(time.time()),
-                    error="Unable to start pytest; verify Python and pytest are installed in the backend environment",
-                )
+            # Redirect to temporary files rather than PIPEs so a noisy test cannot
+            # block on a full OS pipe buffer while the manager polls process state.
+            with tempfile.TemporaryFile() as stdout_file, tempfile.TemporaryFile() as stderr_file:
+                try:
+                    process = subprocess.Popen(
+                        command,
+                        cwd=root,
+                        stdout=stdout_file,
+                        stderr=stderr_file,
+                    )
+                except OSError:
+                    return ExecutionResult(
+                        request_id, ExecutionStatus.ERROR,
+                        started_at=str(started), completed_at=str(time.time()),
+                        error="Unable to start pytest; verify Python and pytest are installed in the backend environment",
+                    )
 
-            cancelled = False
+                cancelled = False
             timed_out = False
-            while process.poll() is None:
-                if cancel_event is not None and cancel_event.is_set():
-                    cancelled = True
-                    process.terminate()
-                    try:
-                        process.wait(timeout=2)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
-                        process.wait()
-                    break
-                if time.monotonic() >= deadline:
-                    timed_out = True
-                    process.terminate()
-                    try:
-                        process.wait(timeout=2)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
-                        process.wait()
-                    break
-                time.sleep(0.05)
+                while process.poll() is None:
+                    if cancel_event is not None and cancel_event.is_set():
+                        cancelled = True
+                        process.terminate()
+                        try:
+                            process.wait(timeout=2)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait()
+                        break
+                    if time.monotonic() >= deadline:
+                        timed_out = True
+                        process.terminate()
+                        try:
+                            process.wait(timeout=2)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait()
+                        break
+                    time.sleep(0.05)
 
-            stdout, stderr = process.communicate()
-            completed_at = str(time.time())
-            if cancelled:
-                return ExecutionResult(
-                    request_id, ExecutionStatus.CANCELLED,
-                    started_at=str(started), completed_at=completed_at,
-                    error="pytest execution cancelled by request",
-                )
-            if timed_out:
-                return ExecutionResult(
-                    request_id, ExecutionStatus.ERROR,
-                    started_at=str(started), completed_at=completed_at,
-                    error="pytest execution timed out",
-                )
+                process.wait()
+                completed_at = str(time.time())
 
-            results = self._parse_junit(report, selected)
-            status = ExecutionStatus.PASSED if process.returncode == 0 else ExecutionStatus.FAILED
-            error = None if process.returncode == 0 else (stderr or stdout)[-4000:]
-            return ExecutionResult(
-                request_id, status, results, str(started), completed_at, error
-            )
+                def tail(handle) -> str:
+                    handle.seek(0, 2)
+                    end = handle.tell()
+                    handle.seek(max(0, end - 4000))
+                    return handle.read().decode("utf-8", errors="replace")
+
+                stdout_tail = tail(stdout_file)
+                stderr_tail = tail(stderr_file)
+                if cancelled:
+                    return ExecutionResult(
+                        request_id, ExecutionStatus.CANCELLED,
+                        started_at=str(started), completed_at=completed_at,
+                        error="pytest execution cancelled by request",
+                    )
+                if timed_out:
+                    return ExecutionResult(
+                        request_id, ExecutionStatus.ERROR,
+                        started_at=str(started), completed_at=completed_at,
+                        error="pytest execution timed out",
+                    )
+
+                results = self._parse_junit(report, selected)
+                status = ExecutionStatus.PASSED if process.returncode == 0 else ExecutionStatus.FAILED
+                error = None if process.returncode == 0 else (stderr_tail or stdout_tail)[-4000:]
+                return ExecutionResult(
+                    request_id, status, results, str(started), completed_at, error
+                )
 
     def _parse_junit(self, report: Path, selected: list[DiscoveredTest | None]) -> list[TestResult]:
         if not report.exists():

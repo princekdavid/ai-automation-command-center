@@ -136,7 +136,7 @@ class LocalEvidenceArtifactStore:
                 stream.write(content)
                 stream.flush()
                 os.fsync(stream.fileno())
-            with self._connect() as connection:
+            with self._connection() as connection:
                 connection.execute(
                     """INSERT INTO artifacts
                     (artifact_id, execution_id, kind, storage_key, byte_size,
@@ -165,7 +165,7 @@ class LocalEvidenceArtifactStore:
         if not 1 <= limit <= 100:
             raise ValueError("limit must be between 1 and 100")
         self._prepare()
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """SELECT artifact_id, execution_id, kind, byte_size, sha256,
                           created_at, media_type
@@ -179,7 +179,7 @@ class LocalEvidenceArtifactStore:
         if not self.enabled:
             return None
         self._prepare()
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """SELECT artifact_id, execution_id, kind, byte_size, sha256,
                           created_at, media_type
@@ -194,7 +194,7 @@ class LocalEvidenceArtifactStore:
         if metadata is None:
             raise ArtifactNotFoundError("artifact not found")
         root = self.root.resolve(strict=True)
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """SELECT storage_key FROM artifacts
                    WHERE execution_id = ? AND artifact_id = ? AND expired = 0""",
@@ -221,7 +221,7 @@ class LocalEvidenceArtifactStore:
         current = now or datetime.now(timezone.utc)
         cutoff = current - timedelta(days=self.retention_days)
         removed = 0
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """SELECT artifact_id, storage_key, byte_size, created_at
                    FROM artifacts WHERE expired = 0

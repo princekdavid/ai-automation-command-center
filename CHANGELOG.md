@@ -34,3 +34,5 @@ All notable project changes should be recorded here.
 - Framework adapter contract and dashboard specification
 - UI/UX principles and security model
 - Agent rules and architecture decision record
+
+- The cumulative integration candidate still requires fresh backend and frontend CI validation after reconciliation with the latest failure-analysis branch.

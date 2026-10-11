@@ -116,7 +116,7 @@ class SQLiteExecutionHistoryStore:
     def list_recent(self, limit: int = 20) -> list[dict[str, Any]]:
         if not 1 <= limit <= 100:
             raise ValueError("limit must be between 1 and 100")
-        with self._connect() as connection:
+        with self._connection() as connection:
             rows = connection.execute(
                 """
                 SELECT request_id, project_path, runner, status, created_at,
@@ -130,7 +130,7 @@ class SQLiteExecutionHistoryStore:
         return [self._row_to_dict(row) for row in rows]
 
     def get(self, request_id: str) -> dict[str, Any] | None:
-        with self._connect() as connection:
+        with self._connection() as connection:
             row = connection.execute(
                 """
                 SELECT request_id, project_path, runner, status, created_at,

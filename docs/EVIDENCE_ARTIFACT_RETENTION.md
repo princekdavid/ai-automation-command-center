@@ -1,10 +1,10 @@
 # Evidence Artifact Storage and Retention (MVP)
 
-Status: implementation started; local store module and unit tests added, API integration and exact-head validation pending.
+Status: implementation integrated into pytest execution and API; exact-head validation pending.
 Branch: `feat/evidence-artifact-retention`
 Scope: local, single-user MVP only.
 
-## Implemented in this branch (not yet validated by CI)
+## Implemented in this branch (exact-head CI still pending)
 
 - Opt-in local artifact store; disabled by default via `AAC_ARTIFACTS_ENABLED=false`.
 - Configurable root via `AAC_ARTIFACTS_DIR`; default `~/.ai-automation-command-center/artifacts`.
@@ -13,8 +13,12 @@ Scope: local, single-user MVP only.
 - Metadata records execution ID, kind, byte count, SHA-256, timestamp, and media type.
 - Execution-scoped metadata lookup and reads that verify path boundary, byte count, and digest.
 - Initial unit tests for disabled behavior, round-trip reads, scope, oversize rejection, budget cleanup, age expiry, and tamper detection.
+- Pytest executor attempts to persist the generated JUnit XML report when artifact storage is enabled; retention errors are best-effort and do not overwrite the test result.
+- `GET /api/v1/executions/{request_id}/artifacts` returns bounded metadata only.
+- `GET /api/v1/executions/{request_id}/artifacts/{artifact_id}` downloads bytes with attachment disposition, `nosniff`, and `no-store` headers.
+- API regression tests cover listing, download behavior, execution scoping, and unknown executions.
 
-The module is not yet wired into the FastAPI execution lifecycle or download/list endpoints. Do not treat evidence artifacts as an available UI/API feature until integration and CI are complete.
+The Test Explorer does not yet display artifact links. Do not call the feature validated until exact-head CI completes.
 
 ## Goals and safety boundaries
 
@@ -29,12 +33,12 @@ Keep compact normalized run summaries in the existing history store and artifact
 ## Remaining integration work
 
 1. Run backend tests on the exact feature head and fix any failures.
-2. Wire artifact persistence into terminal execution results without making it mandatory for test success.
-3. Add bounded metadata list and artifact download endpoints scoped to an execution ID; use safe content-disposition and consistent not-found responses.
+2. Verify best-effort JUnit persistence, bounded metadata endpoints, and safe downloads on exact-head CI.
+3. Add Test Explorer links only after backend validation.
 4. Ensure API responses expose only opaque IDs and metadata, never storage keys or absolute paths.
-5. Add API tests for authorization/scope, pagination, missing/expired artifacts, and non-leaking errors.
+5. Add API tests for missing/expired artifacts and non-leaking errors.
 6. Add symlink/root-boundary, idempotent cleanup, missing-file, corrupt metadata, and partial-write tests where supported.
-7. Update README, implementation status, and changelog after validation.
+7. Update status/changelog after validation.
 
 ## Definition of done
 

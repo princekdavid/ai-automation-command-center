@@ -52,3 +52,64 @@ def test_authentication_network_and_setup_rules(message, expected_category) -> N
 
     assert result.category is expected_category
     assert result.matched_rule is not None
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_category", "expected_rule"),
+    [
+        (
+            "playwright._impl._errors.TimeoutError: page.wait_for_selector: Timeout 30000ms exceeded",
+            FailureCategory.TIMEOUT,
+            "timeout",
+        ),
+        (
+            "strict mode violation: locator('button') resolved to 2 elements",
+            FailureCategory.LOCATOR_NOT_FOUND,
+            "strict mode violation",
+        ),
+        (
+            "API request failed: HTTP 403 Forbidden",
+            FailureCategory.AUTHENTICATION,
+            "forbidden",
+        ),
+        (
+            "requests.exceptions.ConnectionError: connection reset by peer",
+            FailureCategory.NETWORK_ERROR,
+            "connection reset",
+        ),
+        (
+            "pytest: fixture 'db_session' setup failed",
+            FailureCategory.TEST_SETUP,
+            "fixture ' ",
+        ),
+        (
+            "AssertionError: expected total 12, actual total 10; values do not equal",
+            FailureCategory.ASSERTION_FAILURE,
+            "assertionerror",
+        ),
+    ],
+)
+def test_representative_framework_failure_messages(message, expected_category, expected_rule):
+    result = classify_failure("test_checkout", "FAILED", message)
+
+    assert result.category is expected_category
+    assert result.matched_rule == expected_rule
+
+
+def test_failure_classification_is_case_insensitive_and_trims_outcome():
+    result = classify_failure("test_auth", " Error ", "LOGIN FAILED: invalid credentials")
+
+    assert result.category is FailureCategory.AUTHENTICATION
+    assert result.matched_rule == "invalid credentials"
+
+
+def test_unknown_failure_does_not_claim_a_root_cause():
+    result = classify_failure(
+        "test_regression", "failed",
+        "The page rendered but the business workflow stopped unexpectedly",
+    )
+
+    assert result.category is FailureCategory.UNKNOWN
+    assert result.matched_rule is None
+    assert "No deterministic rule matched" in result.summary
+

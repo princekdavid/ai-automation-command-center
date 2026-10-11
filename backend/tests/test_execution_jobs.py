@@ -26,8 +26,10 @@ class MemoryHistory:
 class WaitingService:
     def __init__(self):
         self.started = Event()
+        self.requests = []
 
     def execute(self, request, cancel_event=None):
+        self.requests.append(request.request_id)
         self.started.set()
         if cancel_event.wait(timeout=0.5):
             return ExecutionResult(request.request_id, ExecutionStatus.CANCELLED, error="cancelled")
@@ -120,9 +122,7 @@ def test_cancel_queued_job_prevents_service_from_starting():
 
     # The only worker is still occupied by the blocker, so the cancelled queued
     # job must never be handed to the service when a worker becomes available.
-    assert "job-queued" not in [
-        request_id for request_id in ()
-    ]
+    assert "job-queued" not in service.requests
     manager.cancel("job-blocker")
     wait_for_status(manager, "job-blocker", "cancelled")
     assert history.records["job-queued"] == "cancelled"

@@ -47,7 +47,7 @@ _RULES: tuple[tuple[FailureCategory, tuple[str, ...], str], ...] = (
     ), "The test's expected and actual values appear not to match."),
     (FailureCategory.TEST_SETUP, (
         "fixture setup", "setup failed", "teardown failed", "failed to import",
-        "modulenotfounderror", "importerror", "fixture ' ", "fixture \"",
+        "modulenotfounderror", "importerror", "fixture '", "fixture \"",
     ), "The failure appears to occur while importing or preparing the test."),
 )
 

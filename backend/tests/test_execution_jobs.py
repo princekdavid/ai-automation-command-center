@@ -29,7 +29,7 @@ class WaitingService:
 
     def execute(self, request, cancel_event=None):
         self.started.set()
-        if cancel_event.wait(timeout=2):
+        if cancel_event.wait(timeout=0.5):
             return ExecutionResult(request.request_id, ExecutionStatus.CANCELLED, error="cancelled")
         return ExecutionResult(request.request_id, ExecutionStatus.PASSED)
 

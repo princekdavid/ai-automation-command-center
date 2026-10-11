@@ -150,3 +150,25 @@ def test_download_returns_not_found_after_retention_expiry(tmp_path, monkeypatch
 
     assert response.status_code == 404
 
+
+def test_download_returns_not_found_when_artifact_content_is_tampered(tmp_path, monkeypatch):
+    history = SQLiteExecutionHistoryStore(tmp_path / "history.sqlite3")
+    _seed_execution(history, "run-tampered")
+    artifacts = LocalEvidenceArtifactStore(
+        tmp_path / "artifacts", enabled=True, max_artifact_bytes=1024,
+        max_total_bytes=4096,
+    )
+    saved = artifacts.save("run-tampered", "junit", b"<testsuite/>")
+    (tmp_path / "artifacts" / f"{saved['artifact_id']}.bin").write_bytes(
+        b"<testsuite><tampered/></testsuite>"
+    )
+    monkeypatch.setattr("aac.api.history_store", history)
+    monkeypatch.setattr("aac.api.artifact_store", artifacts)
+
+    response = TestClient(app).get(
+        f"/api/v1/executions/run-tampered/artifacts/{saved['artifact_id']}"
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Evidence artifact not found"
+

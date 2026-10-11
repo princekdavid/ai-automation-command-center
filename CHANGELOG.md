@@ -15,12 +15,13 @@ All notable project changes should be recorded here.
 - Local frontend CORS support with an explicit origin allowlist
 - README instructions for local setup, validation, and execution safety
 - Deterministic failure-analysis API with transparent keyword rules and UI category display
+- Representative Playwright, pytest fixture, API authorization, network-reset, and assertion failure fixtures with precedence, case-normalization, and unknown-fallback regression tests
 
 ### Security and limitations
 - Execution is local and synchronous; it is not an OS-level sandbox.
 - Running a test may execute arbitrary project code; explicit authorization is required.
 - No repository mutation, package installation, deployment, remote execution, retries, or self-healing is implemented.
-- Background lifecycle, cancellation, run history, and persistent evidence storage remain pending. Initial deterministic failure categorization is implemented but requires broader fixture validation.
+- Background lifecycle, cancellation, run history, and persistent evidence storage are tracked in dependent PRs. Failure categorization remains heuristic; representative fixtures improve regression coverage but do not guarantee root-cause accuracy.
 - Backend tests and frontend build passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`; see the Implementation Status for the exact workflow links.
 
 ## Previous Foundation

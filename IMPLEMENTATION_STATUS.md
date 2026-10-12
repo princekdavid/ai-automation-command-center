@@ -8,8 +8,8 @@ Last updated: 2026-10-12
 - **Branch:** `integration/evidence-retention-on-current-stack`
 - **Latest code/test change:** `PR17_PERMISSION_FIX_SHA` (CI pending)
 - **State:** draft, open, not merged
-- **Backend:** [workflow #38170736828](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736828) passed on that code/test head
-- **Frontend:** [workflow #38170736823](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736823) passed on that code/test head
+- **Backend:** [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) passed on that code/test head
+- **Frontend:** [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) passed on that code/test head
 
 This candidate combines deterministic failure analysis, SQLite execution history, background execution lifecycle/cancellation, and opt-in bounded evidence artifact retention. It is a validated draft candidate, not a release or deployment. Later documentation-only commits do not change the validated code/test tree.
 
@@ -27,7 +27,7 @@ This candidate combines deterministic failure analysis, SQLite execution history
 - [x] Artifact listing/download API and historical Test Explorer references
 - [x] Regression tests for symlinked artifact roots, corrupted storage keys, and non-regular artifact paths
 - [x] Backend tests and frontend build passed after the artifact read hardening commit
-- [ ] Revalidate backend tests and frontend build after database symlink/permission hardening
+- [x] Backend tests and frontend build passed after database symlink/permission hardening
 
 ## Security and operating boundaries
 
@@ -41,7 +41,7 @@ This candidate combines deterministic failure analysis, SQLite execution history
 ## Remaining work
 
 1. Continue production-hardening review, especially API authentication/network controls before any non-local deployment.
-2. Consider tighter permission handling for pre-existing artifact directories/database files and a history retention policy.
+2. Add an explicit, bounded retention policy for normalized execution history; artifact directory/database permission hardening is implemented where supported.
 3. Continue evaluating concurrent cleanup/retention consistency and same-user filesystem races; filesystem permissions and database symlink checks are defense-in-depth, not an OS-level sandbox.
 4. Reconcile original stacked PRs only after the cumulative candidate is reviewed; do not merge them automatically.
 5. Add additional framework adapters only after the normalized contracts stabilize.
@@ -52,6 +52,6 @@ The original feature stack was developed as `#5 → #9 → #10 → #11 → #13 �
 
 - [PR #15](https://github.com/princekdavid/ai-automation-command-center/pull/15): history integrated onto latest failure-analysis branch; CI passed at its reviewed head.
 - [PR #16](https://github.com/princekdavid/ai-automation-command-center/pull/16): background lifecycle on validated history; CI passed at its reviewed head.
-- [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17): cumulative evidence-retention candidate; backend and frontend CI passed on code/test head `PR17_PERMISSION_FIX_SHA` (CI pending).
+- [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17): cumulative evidence-retention candidate; backend and frontend CI passed on code/test head `4385760f5096c4e9292b0b38710370e98a179d0f`.
 
 Keep PRs #11, #13, #14 and integration PRs #15–#17 open/unmerged until review and dependency reconciliation are complete. Never merge, deploy, change `main`, or add paid services/secrets without an explicit separate decision.

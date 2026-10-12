@@ -1,6 +1,6 @@
 # Evidence Artifact Storage and Retention
 
-Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Latest permission-hardening change is pending CI; previous code/test validation passed backend [workflow #38170736828](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736828) and frontend [workflow #38170736823](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736823) on code/test head `6b677dc7ae17ecc68d183b5b7e18a08d84817531`. The artifact tests use the store's closing connection context manager for database updates.
+Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Latest code/test head `4385760f5096c4e9292b0b38710370e98a179d0f` passed backend [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630). The artifact tests use the store's closing connection context manager for database updates.
 
 ## Implemented
 

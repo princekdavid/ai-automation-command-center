@@ -21,4 +21,4 @@ All notable project changes should be recorded here.
 - Running a test may execute arbitrary project code; the UI authorization checkbox is not a sandbox.
 - Artifact retention is disabled by default. Evidence and history can contain sensitive data; history is unencrypted and has no retention policy.
 - No remote execution, multi-user authorization, cloud artifact storage, AI analysis, self-healing, auto-merge, or deployment is implemented.
-- Prior artifact read hardening passed backend [workflow #38170736828](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736828) and frontend [workflow #38170736823](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38170736823). Current database symlink/permission hardening is pending CI.
+- Database symlink/permission hardening passed backend [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) on code/test head `4385760f5096c4e9292b0b38710370e98a179d0f`.

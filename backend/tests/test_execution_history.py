@@ -188,3 +188,35 @@ def test_history_keeps_only_newest_configured_record_count(tmp_path) -> None:
 
     assert len(records) == 2
     assert store.get("run-1") is None
+
+def test_history_database_symlink_is_rejected_without_opening_target(tmp_path) -> None:
+    import pytest
+
+    linked_database = tmp_path / "history.sqlite3"
+    outside_database = tmp_path / "outside.sqlite3"
+    outside_database.write_bytes(b"must remain untouched")
+    try:
+        linked_database.symlink_to(outside_database)
+    except (OSError, NotImplementedError):
+        pytest.skip("file symlinks are unavailable in this environment")
+
+    store = SQLiteExecutionHistoryStore(linked_database)
+
+    with pytest.raises(RuntimeError, match="must not be symlinks"):
+        store.list_recent()
+    assert outside_database.read_bytes() == b"must remain untouched"
+
+
+def test_history_database_uses_restrictive_permissions_on_posix(tmp_path) -> None:
+    import os
+    import stat
+    import pytest
+
+    if os.name != "posix":
+        pytest.skip("POSIX permission bits are not portable")
+
+    database = tmp_path / "history.sqlite3"
+    store = SQLiteExecutionHistoryStore(database)
+    store.list_recent()
+
+    assert stat.S_IMODE(database.stat().st_mode) == 0o600

@@ -25,6 +25,7 @@ class SQLiteExecutionHistoryStore:
         max_records: int | None = None,
     ) -> None:
         configured = database_path or os.getenv("AAC_RUN_DB_PATH")
+        self._uses_default_directory = configured is None
         self.database_path = Path(configured).expanduser() if configured else (
             Path.home() / ".ai-automation-command-center" / "history.sqlite3"
         )
@@ -40,9 +41,22 @@ class SQLiteExecutionHistoryStore:
             raise ValueError("history retention days and max records must be positive")
 
     def _connect(self) -> sqlite3.Connection:
-        self.database_path.parent.mkdir(parents=True, exist_ok=True)
+        self.database_path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
+        if self.database_path.parent.is_symlink() or self.database_path.is_symlink():
+            raise RuntimeError("history directory and database must not be symlinks")
+        if self._uses_default_directory:
+            try:
+                os.chmod(self.database_path.parent, 0o700)
+            except OSError:
+                # Some platforms/filesystems do not support POSIX permission bits.
+                pass
         connection = sqlite3.connect(self.database_path, timeout=5)
         connection.row_factory = sqlite3.Row
+        try:
+            os.chmod(self.database_path, 0o600)
+        except OSError:
+            # Preserve local usability on filesystems without POSIX mode support.
+            pass
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS execution_history (

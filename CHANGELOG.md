@@ -5,32 +5,20 @@ All notable project changes should be recorded here.
 ## Unreleased
 
 ### Added
-- Framework-neutral execution request/result contracts and normalized per-test outcomes
-- Controlled local pytest executor with explicit authorization, timeout, and JUnit normalization
-- Execution API and authorization/capability checks
-- React/TypeScript Test Explorer with project discovery, normalized test details, and adapter capability visibility
-- Explicit authorization checkbox and single-test execution controls with normalized result display
-- Regression tests for pytest collection semantics, generated-directory exclusions, symlink boundaries, and JUnit class-method result mapping
-- Backend and frontend CI workflow definitions
-- Local frontend CORS support with an explicit origin allowlist
-- README instructions for local setup, validation, and execution safety
-- Deterministic failure-analysis API with transparent keyword rules and UI category display
-- Local SQLite execution history with bounded list/detail endpoints and recent-runs UI
+- Framework-neutral discovery and execution contracts, adapter registry, and Test Explorer.
+- Controlled local pytest execution with explicit opt-in authorization, timeout, and JUnit normalization.
+- Deterministic failure-analysis API and UI with conservative unknown fallback and representative regression fixtures.
+- SQLite execution history that persists normalized summaries rather than raw stdout/stderr or raw failure messages, with configurable 30-day/500-record retention defaults and restrictive database permissions where supported.
+- Background execution lifecycle, status polling, cooperative cancellation, and bounded in-process workers.
+- Opt-in local evidence artifact storage with generated IDs, execution-scoped reads, size/age/total-budget limits, SHA-256 integrity verification, and download API.
+- Test Explorer links to evidence artifacts on historical run records.
+- Regression coverage for artifact path escapes, symlinks, non-regular files, restrictive directory/database permissions, concurrent cleanup, and history retention where supported.
+- Documentation of cumulative integration state and local-only security boundaries.
 
 ### Security and limitations
-- Execution is local and synchronous; it is not an OS-level sandbox.
-- Running a test may execute arbitrary project code; explicit authorization is required.
-- No repository mutation, package installation, deployment, remote execution, retries, or self-healing is implemented.
-- Background lifecycle/cancellation and persistent evidence artifact storage remain pending. Local history stores normalized summaries only; the database is unencrypted and has no retention policy. Failure categorization remains heuristic; representative Playwright timeout/locator, pytest fixture, HTTP authorization, network reset, and assertion fixtures are covered by regression tests.
-- Failure-analysis CI passed on commit `1aaa61d0e4077a2438ae0dcd71801449ade67a33` (backend workflow #99; frontend workflow #68). The combined execution-history integration branch still requires its own validation.
-
-## Previous Foundation
-- Product vision and non-goals
-- Product requirements document
-- High-level architecture
-- Implementation status tracking
-- Development rules and product roadmap
-- Skill architecture specification
-- Framework adapter contract and dashboard specification
-- UI/UX principles and security model
-- Agent rules and architecture decision record
+- The cumulative stack is tracked in draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17); no integration PR has been merged.
+- The API has no authentication and must remain bound to localhost. CORS is not authentication.
+- Running a test may execute arbitrary project code; the UI authorization checkbox is not a sandbox.
+- Artifact retention is disabled by default. Evidence and history can contain sensitive data; history is unencrypted but is now bounded by age and record count (configurable).
+- No remote execution, multi-user authorization, cloud artifact storage, AI analysis, self-healing, auto-merge, or deployment is implemented.
+- Artifact permission hardening passed on `4385760f5096c4e9292b0b38710370e98a179d0f`; concurrent cleanup/history retention passed on `30054013f0fd373782662d715567e504ff203030`. Local history DB symlink/permission hardening passed backend [workflow #38239089798](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38239089798) and frontend [workflow #38239089957](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38239089957) on code/test head `cf994027ca6123bb7fb70f6ee50dd3ebb24f20c5`.

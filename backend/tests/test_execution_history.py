@@ -66,3 +66,157 @@ def test_history_lists_recent_runs_with_limit(tmp_path) -> None:
 
     assert len(records) == 1
     assert records[0]["request_id"] in {"run-1", "run-2"}
+
+
+
+def test_history_persists_safe_artifact_references_and_updates_existing_rows(tmp_path) -> None:
+    store = SQLiteExecutionHistoryStore(tmp_path / "history.sqlite3")
+    request = ExecutionRequest(
+        request_id="run-with-artifact",
+        mode=ExecutionMode.SINGLE,
+        target=ExecutionTarget(["test-1"], "/workspace/project", "pytest"),
+    )
+    result = ExecutionResult(
+        request_id="run-with-artifact",
+        status=ExecutionStatus.PASSED,
+        metadata={
+            "artifacts": [{
+                "artifact_id": "opaque-artifact-id",
+                "kind": "junit",
+                "byte_size": 123,
+                "sha256": "b" * 64,
+                "created_at": "2026-10-11T10:00:00+00:00",
+                "media_type": "application/xml",
+                "storage_key": "/private/path/results.xml",
+                "execution_id": "run-with-artifact",
+            }]
+        },
+    )
+
+    store.save(request, result)
+    record = store.get("run-with-artifact")
+
+    assert record is not None
+    assert record["artifacts"] == [{
+        "artifact_id": "opaque-artifact-id",
+        "kind": "junit",
+        "byte_size": 123,
+        "sha256": "b" * 64,
+        "created_at": "2026-10-11T10:00:00+00:00",
+        "media_type": "application/xml",
+    }]
+    assert "/private/path" not in json.dumps(record)
+    assert store.list_recent()[0]["artifacts"] == record["artifacts"]
+
+    store.save(request, ExecutionResult("run-with-artifact", ExecutionStatus.FAILED))
+    updated = store.get("run-with-artifact")
+    assert updated is not None
+    assert updated["artifacts"] == []
+
+
+def test_history_migrates_existing_schema_with_no_artifact_column(tmp_path) -> None:
+    import sqlite3
+
+    database = tmp_path / "legacy-history.sqlite3"
+    with sqlite3.connect(database) as connection:
+        connection.execute(
+            """CREATE TABLE execution_history (
+                request_id TEXT PRIMARY KEY,
+                project_path TEXT NOT NULL,
+                runner TEXT NOT NULL,
+                status TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                results_json TEXT NOT NULL
+            )"""
+        )
+        connection.execute(
+            """INSERT INTO execution_history
+            (request_id, project_path, runner, status, created_at, results_json)
+            VALUES ('legacy-run', '/workspace/project', 'pytest', 'passed',
+                    '2026-10-10T10:00:00+00:00', '[]')"""
+        )
+
+    store = SQLiteExecutionHistoryStore(database)
+
+    record = store.get("legacy-run")
+
+    assert record is not None
+    assert record["artifacts"] == []
+
+def test_history_expires_old_records_on_read(tmp_path) -> None:
+    from datetime import datetime, timedelta, timezone
+
+    store = SQLiteExecutionHistoryStore(
+        tmp_path / "history.sqlite3", retention_days=1, max_records=10,
+    )
+    for request_id in ("old-run", "new-run"):
+        request = ExecutionRequest(
+            request_id=request_id,
+            mode=ExecutionMode.SINGLE,
+            target=ExecutionTarget([], "/workspace/project", "pytest"),
+        )
+        store.save(request, ExecutionResult(request_id, ExecutionStatus.REJECTED))
+
+    old_timestamp = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+    with store._connection() as connection:
+        connection.execute(
+            "UPDATE execution_history SET created_at = ? WHERE request_id = ?",
+            (old_timestamp, "old-run"),
+        )
+
+    records = store.list_recent()
+
+    assert [record["request_id"] for record in records] == ["new-run"]
+    assert store.get("old-run") is None
+
+
+def test_history_keeps_only_newest_configured_record_count(tmp_path) -> None:
+    store = SQLiteExecutionHistoryStore(
+        tmp_path / "history.sqlite3", retention_days=30, max_records=2,
+    )
+    for request_id in ("run-1", "run-2", "run-3"):
+        request = ExecutionRequest(
+            request_id=request_id,
+            mode=ExecutionMode.SINGLE,
+            target=ExecutionTarget([], "/workspace/project", "pytest"),
+        )
+        store.save(request, ExecutionResult(request_id, ExecutionStatus.REJECTED))
+
+    records = store.list_recent()
+
+    assert len(records) == 2
+    assert store.get("run-1") is None
+
+def test_history_database_symlink_is_rejected_without_opening_target(tmp_path) -> None:
+    import pytest
+
+    linked_database = tmp_path / "history.sqlite3"
+    outside_database = tmp_path / "outside.sqlite3"
+    outside_database.write_bytes(b"must remain untouched")
+    try:
+        linked_database.symlink_to(outside_database)
+    except (OSError, NotImplementedError):
+        pytest.skip("file symlinks are unavailable in this environment")
+
+    store = SQLiteExecutionHistoryStore(linked_database)
+
+    with pytest.raises(RuntimeError, match="must not be symlinks"):
+        store.list_recent()
+    assert outside_database.read_bytes() == b"must remain untouched"
+
+
+def test_history_database_uses_restrictive_permissions_on_posix(tmp_path) -> None:
+    import os
+    import stat
+    import pytest
+
+    if os.name != "posix":
+        pytest.skip("POSIX permission bits are not portable")
+
+    database = tmp_path / "history.sqlite3"
+    store = SQLiteExecutionHistoryStore(database)
+    store.list_recent()
+
+    assert stat.S_IMODE(database.stat().st_mode) == 0o600

@@ -143,3 +143,29 @@ def test_cancelling_terminal_job_is_idempotent():
     assert snapshot["status"] == "passed"
     assert snapshot["cancel_requested"] is False
     assert history.records["job-terminal"] == "passed"
+
+
+def test_status_snapshot_exposes_only_artifact_metadata():
+    class ArtifactService:
+        def execute(self, request, cancel_event=None):
+            return ExecutionResult(
+                request.request_id,
+                ExecutionStatus.PASSED,
+                metadata={
+                    "artifacts": [{
+                        "artifact_id": "opaque-id",
+                        "kind": "junit",
+                        "byte_size": 10,
+                        "sha256": "a" * 64,
+                        "created_at": "2026-10-11T00:00:00+00:00",
+                        "media_type": "application/xml",
+                    }]
+                },
+            )
+
+    manager = ExecutionJobManager(ArtifactService(), MemoryHistory(), max_workers=1)
+    manager.submit(make_request("job-artifact"))
+    snapshot = wait_for_status(manager, "job-artifact", "passed")
+
+    assert snapshot["metadata"]["artifacts"][0]["artifact_id"] == "opaque-id"
+    assert "storage_key" not in snapshot["metadata"]["artifacts"][0]

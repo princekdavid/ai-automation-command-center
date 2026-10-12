@@ -1,6 +1,6 @@
 # AI Automation Command Center
 
-A framework-agnostic QA automation control plane. The current MVP discovers a local automation project, normalizes pytest tests into a Test Explorer, reports adapter capabilities, and supports explicitly authorized single-test execution through a controlled local pytest adapter.
+A framework-agnostic QA automation control plane. The current MVP discovers a local automation project, normalizes pytest tests into a Test Explorer, reports adapter capabilities, supports explicitly authorized single-test execution, records local execution history, and optionally retains bounded evidence artifacts.
 
 ## Current MVP scope
 
@@ -8,12 +8,14 @@ A framework-agnostic QA automation control plane. The current MVP discovers a lo
 - Read-only discovery with generated-directory and symlink exclusions
 - Normalized test metadata and adapter capability reporting
 - React/TypeScript Test Explorer with search and test details
-- Explicitly authorized local pytest execution, timeout, and normalized JUnit results
-- Local SQLite run history with minimized normalized summaries
-- Deterministic failure categories displayed alongside failed results
+- Explicitly authorized local pytest execution with timeout and normalized JUnit results
+- Background execution lifecycle, status polling, and cooperative cancellation
+- Local SQLite execution history with minimized normalized summaries
+- Deterministic failure categories and regression fixtures
+- Opt-in local evidence artifact storage with per-file and total size limits, retention, and digest verification
 - Backend pytest and frontend build workflows in GitHub Actions
 
-The MVP does **not** yet include background runs/cancellation, evidence artifact storage, remote repository connections, additional execution adapters, or AI analysis. See [Implementation Status](IMPLEMENTATION_STATUS.md) and [Changelog](CHANGELOG.md).
+The current cumulative candidate is [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17), kept as a draft and not merged. Artifact cleanup is serialized through SQLite, and bounded history retention passed backend and frontend CI on code/test head `30054013f0fd373782662d715567e504ff203030`. Additional framework adapters, remote repository connections, multi-user authentication/authorization, OS-level execution sandboxing, and AI analysis are not implemented. See [Implementation Status](IMPLEMENTATION_STATUS.md), [Changelog](CHANGELOG.md), and [the artifact-retention notes](docs/EVIDENCE_ARTIFACT_RETENTION.md).
 
 ## Requirements
 
@@ -71,11 +73,13 @@ To point the frontend at another API URL, set `VITE_API_BASE_URL` before startin
 3. Select a discovered test to inspect its normalized metadata.
 4. To execute it, explicitly check the authorization box and choose **Run selected test**.
 5. Review the normalized status, failure category, and message.
-6. View recent runs in the Local Run History section.
+6. View recent runs and any retained evidence in Local Run History.
 
-**Execution safety:** running a test may execute arbitrary code from that project. Only authorize projects you trust. The authorization checkbox is not an OS-level sandbox. Keep the API bound to localhost unless you have implemented appropriate network access controls and authentication.
+**Execution safety:** running a test may execute arbitrary code from that project. The authorization checkbox is not an OS-level sandbox or identity/access-control mechanism. Only authorize projects you trust. Keep the API bound to localhost. The API has no user authentication; do not expose it to a LAN, public network, or untrusted browser origin without implementing and reviewing authentication and network access controls.
 
-**Local history:** compact execution summaries are stored in SQLite at `~/.ai-automation-command-center/history.sqlite3` by default. Set `AAC_RUN_DB_PATH` to use another location. Raw stdout/stderr and raw failure messages are not persisted; the database is not encrypted and has no retention policy yet. See [Execution Contract](docs/EXECUTION_CONTRACT.md).
+**Local history:** compact execution summaries are stored in SQLite at `~/.ai-automation-command-center/history.sqlite3` by default. Set `AAC_RUN_DB_PATH` to use another location. Raw stdout/stderr and raw per-test failure messages are not persisted; the database is not encrypted. History is pruned to 30 days and 500 records by default; configure `AAC_HISTORY_RETENTION_DAYS` and `AAC_HISTORY_MAX_RECORDS` to change those positive limits. Symlinked history database paths are rejected, and database permissions are restricted to `0600` where supported.
+
+**Evidence artifacts:** persistence is disabled by default. Enable it deliberately with `AAC_ARTIFACTS_ENABLED=true`; optionally set `AAC_ARTIFACTS_DIR` to a dedicated local directory. The default is `~/.ai-automation-command-center/artifacts`. JUnit reports may contain customer data, identifiers, or secrets emitted by tests. Treat artifact storage as sensitive local data; do not enable it for untrusted projects or store secrets intentionally. See [artifact-retention limits and known boundaries](docs/EVIDENCE_ARTIFACT_RETENTION.md).
 
 ## Validate changes
 
@@ -95,7 +99,7 @@ npm install
 npm run build
 ```
 
-Do not treat a change as validated until the relevant checks have passed on the exact commit under review.
+Do not treat a change as validated until the relevant checks have passed on the exact code commit under review.
 
 ## Project rules
 

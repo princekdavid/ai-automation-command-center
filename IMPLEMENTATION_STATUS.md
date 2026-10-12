@@ -2,76 +2,59 @@
 
 Last updated: 2026-10-12
 
-## Foundation and Phase 1
-- [x] Product vision, MVP scope, architecture, UI/UX principles, security model, agent rules, and contribution guidance documented
-- [x] Framework-neutral adapter, Test Explorer, and execution contracts documented
-- [x] Python/FastAPI backend skeleton and canonical Framework DNA/Capability models
-- [x] Read-only local project discovery and REST endpoint
-- [x] Adapter registry and reference pytest adapter
-- [x] Normalized discovered-test model and test discovery REST endpoint
-- [x] Adapter capability reporting
-- [x] Discovery exclusions and symlink-boundary regression tests added
-- [x] React/TypeScript Test Explorer vertical slice
-- [x] Framework-neutral execution request/result contracts
-- [x] Explicit authorization and capability-gated execution orchestration
-- [x] Controlled local pytest execution with timeout and JUnit normalization
-- [x] Execution API and authorization tests
-- [x] Local Vite CORS preflight support with explicit configurable origins
-- [x] README local setup, validation, and execution safety instructions
-- [x] Explicit authorization checkbox and single-test execution control in Test Explorer
-- [x] Normalized execution status/result display in the UI
-- [x] Backend CI passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`
-- [x] Frontend build passed on code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`
-- [x] Deterministic rule-based failure classification API and UI display added on this follow-up branch
-- [x] Backend tests passed on failure-analysis commit `1394883aecbfa006d3e9c3e044abc75572049928`
-- [x] Frontend build passed on the same failure-analysis commit
-- [ ] Integration of the cumulative feature stack into main
-- [ ] Background run lifecycle and cancellation
-- [x] Local SQLite execution history API and recent-runs UI implemented on PR #11\n- [ ] Reconcile execution history with latest failure-analysis code and validate the combined branch
-- [ ] Persistent evidence artifact storage
-- [x] Deterministic failure categorization with representative regression fixtures (Playwright, pytest fixture, HTTP authorization, network reset, assertion, and unknown fallback)
-- [ ] Additional framework adapters
-- [ ] AI analysis
+## Current cumulative candidate
 
-## Current State
+- **Pull request:** [#17 — cumulative integration candidate](https://github.com/princekdavid/ai-automation-command-center/pull/17)
+- **Branch:** `integration/evidence-retention-on-current-stack`
+- **Latest code/test head validated:** `cf994027ca6123bb7fb70f6ee50dd3ebb24f20c5`
+- **State:** draft, open, not merged
+- **Backend:** [workflow #38239089798](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38239089798) passed on that code/test head
+- **Frontend:** [workflow #38239089957](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38239089957) passed on that code/test head
 
-This branch extends the reconciled execution vertical slice with deterministic, keyword-based failure classification, a local SQLite execution-history API, and a recent-runs UI. The UI supports discovery, normalized test details, an explicit authorization checkbox, and running one selected pytest test with a bounded timeout. The API defaults authorization to false and rejects unsupported runners/capabilities and test IDs that were not discovered for the project.
+This candidate combines deterministic failure analysis, SQLite execution history, background execution lifecycle/cancellation, and opt-in bounded evidence artifact retention. It is a validated draft candidate, not a release or deployment. Later documentation-only commits do not change the validated code/test tree.
 
-The executor uses an argument list rather than shell interpolation, captures stdout/stderr, enforces a timeout, and normalizes JUnit XML results. Class-method results are matched using JUnit class metadata. The failure-analysis endpoint classifies normalized failed/error results with transparent ordered keyword rules; passed/skipped results are marked not applicable and unrecognized failures remain unknown. The history store persists status, timestamps, per-test outcome/duration, failure category, matched rule, and evidence count. It deliberately excludes raw stdout/stderr and raw per-test messages. This is a controlled local executor, not a sandbox; running a test can execute arbitrary code from the selected project and should only be authorized for trusted projects.
+## Implemented in the cumulative candidate
 
-Discovery skips common generated/virtual-environment directories and symlinks, checks resolved paths remain inside the project, handles inaccessible paths conservatively, and limits inspected file sizes and returned path lists. These safeguards are not a complete filesystem sandbox.
+- [x] Framework-neutral adapter, discovery, and execution contracts
+- [x] Local project and test discovery with generated-directory and symlink exclusions
+- [x] Test Explorer UI and adapter capability reporting
+- [x] Explicit authorization before running selected pytest tests
+- [x] Controlled local pytest execution with timeout and normalized JUnit results
+- [x] Deterministic failure classification with conservative unknown fallback
+- [x] SQLite execution history with minimized summaries and additive artifact-reference migration
+- [x] Background job status, cooperative cancellation, and bounded in-process worker pool
+- [x] Opt-in local evidence artifacts, generated IDs, execution scoping, size/age/budget limits, and SHA-256 integrity checks
+- [x] Artifact listing/download API and historical Test Explorer references
+- [x] Regression tests for symlinked artifact roots, corrupted storage keys, and non-regular artifact paths
+- [x] Backend tests and frontend build passed after the artifact read hardening commit
+- [x] Backend tests and frontend build passed after database symlink/permission hardening
+- [x] Concurrent artifact cleanup serialized with a SQLite write lock; regression test passed
+- [x] Execution history bounded by configurable age and record count; retention tests passed
+- [x] Local history database rejects symlinks and applies restrictive file permissions where supported
 
-## Validation Evidence
+## Security and operating boundaries
 
-- Backend tests passed on the reconciled code commit `8a8bcf2a91aa014fa655ed576ed2368b6ea7d9aa`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634577).
-- Frontend build passed on the same code commit: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091634579).
-- The later commit `90876b86ad1630e5c4f2cc95d4f4458c228c252b` changes README documentation only; no backend/frontend source changed after the validated code commit for PR #9.
-- The failure-analysis follow-up commit `1394883aecbfa006d3e9c3e044abc75572049928` passed backend tests: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897550).
-- The same commit passed the frontend build: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38091897545).
-- Persisted-history backend tests passed on code commit `62d0fe7d63532d04da99714739b09c214a9dd01a`: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194742).
-- The same commit passed the frontend build: [workflow run](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38092194740).
-- Subsequent commits update documentation only; no backend/frontend source changed after the validated code commit.
-- An earlier classifier test correctly exposed an over-broad `expected ` keyword; the rule was narrowed and the full backend suite passed on the newer commit.
+- This is a local, single-user MVP. The API has **no authentication/authorization identity layer**. Keep it bound to `127.0.0.1`; CORS is not authentication and is not a network access-control boundary.
+- Running tests executes project code and is not sandboxed. Only run trusted projects.
+- Evidence storage is disabled by default. Artifacts and history may contain sensitive metadata; history is not encrypted; age- and count-based retention is implemented with configurable limits, and the database file is restricted to `0600` where supported.
+- Artifact endpoints scope reads to execution IDs, use opaque artifact IDs, verify stored byte count and SHA-256, reject symlink/path escapes, and return attachment/no-store/nosniff headers.
+- Local filesystem permissions and same-host access remain part of the trust boundary. This is not a multi-user or compliance-ready storage service.
+- No remote repository connector, cloud artifact store, AI analysis, self-healing, auto-merge, deployment, or repository-mutating execution is implemented.
 
-## Known Limitations
+## Remaining work
 
-- Framework detection remains heuristic and does not comprehensively parse each package manager's dependency metadata.
-- Pytest markers, parametrization, fixtures, dynamic collection, and all pytest edge cases are not normalized.
-- The synchronous API request blocks until pytest finishes; background execution, cancellation, concurrency controls, and persistent run history are not implemented.
-- Results are returned to the caller but are not persisted; evidence references exist in the contract but no artifact storage pipeline is implemented.
-- Only pytest is implemented as an execution-capable reference adapter.
-- The API accepts a local filesystem path. Secure remote repository connectors, multi-user authentication/authorization, and an OS-level execution sandbox are not implemented.
-- UI run controls currently support one selected test at a time; bulk selection and live progress are future work.
+1. Continue production-hardening review, especially API authentication/network controls before any non-local deployment.
+2. Continue reviewing same-user filesystem races and decide whether history should gain explicit deletion/export controls.
+3. Design authentication and network access controls before considering any non-local deployment; filesystem permissions and symlink checks are defense-in-depth, not an OS-level sandbox.
+4. Reconcile original stacked PRs only after the cumulative candidate is reviewed; do not merge them automatically.
+5. Add additional framework adapters only after the normalized contracts stabilize.
 
-## Next Steps
+## Integration dependency and PR policy
 
-1. Integrate PR #9, then #10, before this stacked follow-up.
-2. Add background run records and cancellation before expanding to bulk execution.
-3. Add durable evidence artifact storage and retention controls.
-4. Review deterministic categories against representative fixtures; retain unknown when evidence is weak.
-5. Add another adapter only after the normalized contracts stabilize.
+The original feature stack was developed as `#5 → #9 → #10 → #11 → #13 → #14`. Integration candidates were created without rewriting or merging original branches:
 
-## Tracking Rule
+- [PR #15](https://github.com/princekdavid/ai-automation-command-center/pull/15): history integrated onto latest failure-analysis branch; CI passed at its reviewed head.
+- [PR #16](https://github.com/princekdavid/ai-automation-command-center/pull/16): background lifecycle on validated history; CI passed at its reviewed head.
+- [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17): cumulative evidence-retention candidate; backend and frontend CI passed on code/test head `cf994027ca6123bb7fb70f6ee50dd3ebb24f20c5`, including concurrent cleanup, history retention, and history database symlink/permission tests.
 
-Update this file after every meaningful implementation milestone. Never mark functionality complete without validation.
-\n\n## Current Integration Follow-up (2026-10-12)\n\nA dedicated integration branch, `integration/execution-history-on-latest-failure-analysis`, has been created from the latest PR #10 head (`1aaa61d0e4077a2438ae0dcd71801449ade67a33`). The history store, its unit tests, pytest collection guard fixes, API endpoints, API tests, Test Explorer history UI, and history styles have been applied to that branch. This combined branch has not yet passed CI; do not treat the cumulative feature stack as ready to merge. PRs #11, #13, and #14 remain unmerged until the combined branch and downstream dependencies are validated.\n
+Keep PRs #11, #13, #14 and integration PRs #15–#17 open/unmerged until review and dependency reconciliation are complete. Never merge, deploy, change `main`, or add paid services/secrets without an explicit separate decision.

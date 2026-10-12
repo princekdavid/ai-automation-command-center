@@ -45,7 +45,7 @@ This candidate combines deterministic failure analysis, SQLite execution history
 
 1. Continue production-hardening review, especially API authentication/network controls before any non-local deployment.
 2. Continue reviewing same-user filesystem races and decide whether history should gain explicit deletion/export controls.
-3. Continue evaluating same-user filesystem races; filesystem permissions and database symlink checks are defense-in-depth, not an OS-level sandbox.
+3. Design authentication and network access controls before considering any non-local deployment; filesystem permissions and symlink checks are defense-in-depth, not an OS-level sandbox.
 4. Reconcile original stacked PRs only after the cumulative candidate is reviewed; do not merge them automatically.
 5. Add additional framework adapters only after the normalized contracts stabilize.
 
@@ -55,6 +55,6 @@ The original feature stack was developed as `#5 → #9 → #10 → #11 → #13 �
 
 - [PR #15](https://github.com/princekdavid/ai-automation-command-center/pull/15): history integrated onto latest failure-analysis branch; CI passed at its reviewed head.
 - [PR #16](https://github.com/princekdavid/ai-automation-command-center/pull/16): background lifecycle on validated history; CI passed at its reviewed head.
-- [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17): cumulative evidence-retention candidate; backend and frontend CI passed on code/test head `4385760f5096c4e9292b0b38710370e98a179d0f`; concurrent cleanup and history retention are pending CI on `30054013f0fd373782662d715567e504ff203030`.
+- [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17): cumulative evidence-retention candidate; backend and frontend CI passed on code/test head `cf994027ca6123bb7fb70f6ee50dd3ebb24f20c5`, including concurrent cleanup, history retention, and history database symlink/permission tests.
 
 Keep PRs #11, #13, #14 and integration PRs #15–#17 open/unmerged until review and dependency reconciliation are complete. Never merge, deploy, change `main`, or add paid services/secrets without an explicit separate decision.

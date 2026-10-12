@@ -257,6 +257,11 @@ class LocalEvidenceArtifactStore:
         cutoff = current - timedelta(days=self.retention_days)
         removed = 0
         with self._connection() as connection:
+            # Serialize cleanup decisions across store instances/process threads.
+            # Without an early write lock, concurrent cleaners can compute the
+            # live-byte total from the same snapshot and both make stale
+            # retention decisions before either marks rows expired.
+            connection.execute("BEGIN IMMEDIATE")
             rows = connection.execute(
                 """SELECT artifact_id, storage_key, byte_size, created_at
                    FROM artifacts WHERE expired = 0

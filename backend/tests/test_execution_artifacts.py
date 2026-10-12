@@ -256,3 +256,38 @@ def test_corrupt_storage_key_cannot_escape_artifact_root(tmp_path) -> None:
 
     with pytest.raises(ArtifactNotFoundError):
         store.read("run-corrupt-key", metadata["artifact_id"])
+
+def test_concurrent_cleanup_serializes_retention_decisions(tmp_path) -> None:
+    from concurrent.futures import ThreadPoolExecutor
+
+    root = tmp_path / "artifacts"
+    store = LocalEvidenceArtifactStore(
+        root, enabled=True, max_artifact_bytes=8, max_total_bytes=100,
+        retention_days=30,
+    )
+    artifacts = [
+        store.save(f"run-{index}", "log", b"123456")
+        for index in range(3)
+    ]
+    now = datetime.now(timezone.utc)
+    with store._connection() as connection:
+        for index, artifact in enumerate(artifacts):
+            connection.execute(
+                "UPDATE artifacts SET created_at = ? WHERE artifact_id = ?",
+                ((now - timedelta(minutes=3 - index)).isoformat(), artifact["artifact_id"]),
+            )
+
+    # Independent store objects model concurrent callers sharing the same DB.
+    first = LocalEvidenceArtifactStore(
+        root, enabled=True, max_artifact_bytes=8, max_total_bytes=8, retention_days=30,
+    )
+    second = LocalEvidenceArtifactStore(
+        root, enabled=True, max_artifact_bytes=8, max_total_bytes=8, retention_days=30,
+    )
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        removed = list(pool.map(lambda instance: instance.cleanup(), (first, second)))
+
+    assert sum(removed) == 2
+    assert first.list_metadata("run-2")
+    assert first.list_metadata("run-0") == []
+    assert first.list_metadata("run-1") == []

@@ -144,3 +144,47 @@ def test_history_migrates_existing_schema_with_no_artifact_column(tmp_path) -> N
 
     assert record is not None
     assert record["artifacts"] == []
+
+def test_history_expires_old_records_on_read(tmp_path) -> None:
+    from datetime import datetime, timedelta, timezone
+
+    store = SQLiteExecutionHistoryStore(
+        tmp_path / "history.sqlite3", retention_days=1, max_records=10,
+    )
+    for request_id in ("old-run", "new-run"):
+        request = ExecutionRequest(
+            request_id=request_id,
+            mode=ExecutionMode.SINGLE,
+            target=ExecutionTarget([], "/workspace/project", "pytest"),
+        )
+        store.save(request, ExecutionResult(request_id, ExecutionStatus.REJECTED))
+
+    old_timestamp = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+    with store._connection() as connection:
+        connection.execute(
+            "UPDATE execution_history SET created_at = ? WHERE request_id = ?",
+            (old_timestamp, "old-run"),
+        )
+
+    records = store.list_recent()
+
+    assert [record["request_id"] for record in records] == ["new-run"]
+    assert store.get("old-run") is None
+
+
+def test_history_keeps_only_newest_configured_record_count(tmp_path) -> None:
+    store = SQLiteExecutionHistoryStore(
+        tmp_path / "history.sqlite3", retention_days=30, max_records=2,
+    )
+    for request_id in ("run-1", "run-2", "run-3"):
+        request = ExecutionRequest(
+            request_id=request_id,
+            mode=ExecutionMode.SINGLE,
+            target=ExecutionTarget([], "/workspace/project", "pytest"),
+        )
+        store.save(request, ExecutionResult(request_id, ExecutionStatus.REJECTED))
+
+    records = store.list_recent()
+
+    assert len(records) == 2
+    assert store.get("run-1") is None

@@ -6,7 +6,7 @@ import json
 import os
 import sqlite3
 from contextlib import contextmanager
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -17,11 +17,27 @@ from aac.execution.contracts import ExecutionRequest, ExecutionResult
 class SQLiteExecutionHistoryStore:
     """Persist compact, local-only execution summaries without raw logs."""
 
-    def __init__(self, database_path: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        database_path: str | Path | None = None,
+        *,
+        retention_days: int | None = None,
+        max_records: int | None = None,
+    ) -> None:
         configured = database_path or os.getenv("AAC_RUN_DB_PATH")
         self.database_path = Path(configured).expanduser() if configured else (
             Path.home() / ".ai-automation-command-center" / "history.sqlite3"
         )
+        self.retention_days = int(
+            os.getenv("AAC_HISTORY_RETENTION_DAYS", "30")
+            if retention_days is None else retention_days
+        )
+        self.max_records = int(
+            os.getenv("AAC_HISTORY_MAX_RECORDS", "500")
+            if max_records is None else max_records
+        )
+        if self.retention_days < 1 or self.max_records < 1:
+            raise ValueError("history retention days and max records must be positive")
 
     def _connect(self) -> sqlite3.Connection:
         self.database_path.parent.mkdir(parents=True, exist_ok=True)
@@ -112,11 +128,29 @@ class SQLiteExecutionHistoryStore:
                     json.dumps(artifact_refs, separators=(",", ":"), ensure_ascii=False),
                 ),
             )
+            self._prune(connection)
+
+    def _prune(self, connection: sqlite3.Connection) -> None:
+        """Bound local history by age and count; retain newest records first."""
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=self.retention_days)).isoformat()
+        connection.execute(
+            "DELETE FROM execution_history WHERE created_at < ?",
+            (cutoff,),
+        )
+        connection.execute(
+            """DELETE FROM execution_history
+               WHERE request_id NOT IN (
+                   SELECT request_id FROM execution_history
+                   ORDER BY created_at DESC, request_id DESC LIMIT ?
+               )""",
+            (self.max_records,),
+        )
 
     def list_recent(self, limit: int = 20) -> list[dict[str, Any]]:
         if not 1 <= limit <= 100:
             raise ValueError("limit must be between 1 and 100")
         with self._connection() as connection:
+            self._prune(connection)
             rows = connection.execute(
                 """
                 SELECT request_id, project_path, runner, status, created_at,
@@ -131,6 +165,7 @@ class SQLiteExecutionHistoryStore:
 
     def get(self, request_id: str) -> dict[str, Any] | None:
         with self._connection() as connection:
+            self._prune(connection)
             row = connection.execute(
                 """
                 SELECT request_id, project_path, runner, status, created_at,

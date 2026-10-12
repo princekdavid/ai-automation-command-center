@@ -1,6 +1,6 @@
 # Evidence Artifact Storage and Retention
 
-Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Artifact permission-hardening passed backend [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) on head `4385760f5096c4e9292b0b38710370e98a179d0f`. Concurrent cleanup and history-retention changes are pending CI on `30054013f0fd373782662d715567e504ff203030`.
+Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Artifact permission-hardening passed backend [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) on head `4385760f5096c4e9292b0b38710370e98a179d0f`. Concurrent cleanup and history-retention changes passed backend [workflow #38238859382](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859382) and frontend [workflow #38238859380](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859380) on code/test head `30054013f0fd373782662d715567e504ff203030`.
 
 ## Implemented
 
@@ -27,5 +27,5 @@ Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid
 
 ## Review follow-ups
 
-- Concurrent artifact cleanup now takes a SQLite write lock before making retention decisions; validate the regression test in CI and continue evaluating filesystem race conditions.
+- Concurrent artifact cleanup takes a SQLite write lock before making retention decisions; the regression test passed in backend CI.
 - Keep API responses restricted to opaque IDs and approved metadata; never expose storage keys or absolute paths.

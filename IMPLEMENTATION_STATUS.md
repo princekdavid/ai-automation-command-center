@@ -6,10 +6,10 @@ Last updated: 2026-10-12
 
 - **Pull request:** [#17 — cumulative integration candidate](https://github.com/princekdavid/ai-automation-command-center/pull/17)
 - **Branch:** `integration/evidence-retention-on-current-stack`
-- **Latest code/test head:** `30054013f0fd373782662d715567e504ff203030` (CI pending)
+- **Latest code/test head validated:** `30054013f0fd373782662d715567e504ff203030`
 - **State:** draft, open, not merged
-- **Backend:** [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) passed on that code/test head
-- **Frontend:** [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) passed on that code/test head
+- **Backend:** [workflow #38238859382](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859382) passed on that code/test head
+- **Frontend:** [workflow #38238859380](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859380) passed on that code/test head
 
 This candidate combines deterministic failure analysis, SQLite execution history, background execution lifecycle/cancellation, and opt-in bounded evidence artifact retention. It is a validated draft candidate, not a release or deployment. Later documentation-only commits do not change the validated code/test tree.
 
@@ -28,6 +28,8 @@ This candidate combines deterministic failure analysis, SQLite execution history
 - [x] Regression tests for symlinked artifact roots, corrupted storage keys, and non-regular artifact paths
 - [x] Backend tests and frontend build passed after the artifact read hardening commit
 - [x] Backend tests and frontend build passed after database symlink/permission hardening
+- [x] Concurrent artifact cleanup serialized with a SQLite write lock; regression test passed
+- [x] Execution history bounded by configurable age and record count; retention tests passed
 
 ## Security and operating boundaries
 
@@ -41,7 +43,7 @@ This candidate combines deterministic failure analysis, SQLite execution history
 ## Remaining work
 
 1. Continue production-hardening review, especially API authentication/network controls before any non-local deployment.
-2. Validate the concurrent artifact cleanup and execution-history retention changes with CI on the latest code/test head.
+2. Continue reviewing same-user filesystem races and decide whether history should gain explicit deletion/export controls.
 3. Continue evaluating same-user filesystem races; filesystem permissions and database symlink checks are defense-in-depth, not an OS-level sandbox.
 4. Reconcile original stacked PRs only after the cumulative candidate is reviewed; do not merge them automatically.
 5. Add additional framework adapters only after the normalized contracts stabilize.

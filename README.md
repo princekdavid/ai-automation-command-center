@@ -15,7 +15,7 @@ A framework-agnostic QA automation control plane. The current MVP discovers a lo
 - Opt-in local evidence artifact storage with per-file and total size limits, retention, and digest verification
 - Backend pytest and frontend build workflows in GitHub Actions
 
-The current cumulative candidate is [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17), kept as a draft and not merged. Artifact cleanup is serialized through SQLite; current CI is validating this change and bounded history retention. Additional framework adapters, remote repository connections, multi-user authentication/authorization, OS-level execution sandboxing, and AI analysis are not implemented. See [Implementation Status](IMPLEMENTATION_STATUS.md), [Changelog](CHANGELOG.md), and [the artifact-retention notes](docs/EVIDENCE_ARTIFACT_RETENTION.md).
+The current cumulative candidate is [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17), kept as a draft and not merged. Artifact cleanup is serialized through SQLite, and bounded history retention passed backend and frontend CI on code/test head `30054013f0fd373782662d715567e504ff203030`. Additional framework adapters, remote repository connections, multi-user authentication/authorization, OS-level execution sandboxing, and AI analysis are not implemented. See [Implementation Status](IMPLEMENTATION_STATUS.md), [Changelog](CHANGELOG.md), and [the artifact-retention notes](docs/EVIDENCE_ARTIFACT_RETENTION.md).
 
 ## Requirements
 

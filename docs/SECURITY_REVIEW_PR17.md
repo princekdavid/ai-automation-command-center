@@ -1,6 +1,6 @@
 # PR #17 Security and Quality Review
 
-Review target: cumulative integration candidate `integration/evidence-retention-on-current-stack`. Artifact permission-hardening head `4385760f5096c4e9292b0b38710370e98a179d0f` passed backend workflow [#38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend workflow [#38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630). Concurrent cleanup and history retention changes on `30054013f0fd373782662d715567e504ff203030` passed backend workflow [#38238859382](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859382) and frontend workflow [#38238859380](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859380).
+Review target: cumulative integration candidate `integration/evidence-retention-on-current-stack`. Artifact permission-hardening head `4385760f5096c4e9292b0b38710370e98a179d0f` passed backend workflow [#38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend workflow [#38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630). Concurrent cleanup and history retention changes on `30054013f0fd373782662d715567e504ff203030` passed backend workflow [#38238859382](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859382) and frontend workflow [#38238859380](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859380). Local history DB symlink/permission hardening passed backend workflow [#38239089798](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38239089798) and frontend workflow [#38239089957](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38239089957) on `cf994027ca6123bb7fb70f6ee50dd3ebb24f20c5`.
 
 ## Review summary
 
@@ -18,7 +18,7 @@ Execution, history, status, and artifact endpoints do not enforce a user identit
 
 ### Filesystem permissions and database symlinks
 
-The latest change rejects a symlinked artifact root or SQLite database path before connecting, reapplies mode `0700` to the dedicated artifact directory and `0600` to the SQLite database where supported, and adds regression tests for database-symlink rejection and POSIX permissions. Unsupported filesystems/platforms may not honor POSIX modes. These controls do not defend against a hostile process running as the same OS user. History remains local and unencrypted; its rows are now pruned by configurable age and record-count limits.
+The latest change rejects a symlinked artifact root or SQLite database path before connecting, reapplies mode `0700` to the dedicated artifact directory and `0600` to the SQLite database where supported, and adds regression tests for database-symlink rejection and POSIX permissions. Unsupported filesystems/platforms may not honor POSIX modes. These controls do not defend against a hostile process running as the same OS user. History remains local and unencrypted; its database rejects symlinks, uses `0600` permissions where supported, and rows are pruned by configurable age and record-count limits.
 
 ### Scope checks
 

@@ -1,6 +1,6 @@
 # Evidence Artifact Storage and Retention
 
-Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Artifact permission-hardening passed backend [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) on head `4385760f5096c4e9292b0b38710370e98a179d0f`. Concurrent cleanup and history-retention changes passed backend [workflow #38238859382](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859382) and frontend [workflow #38238859380](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38238859380) on code/test head `30054013f0fd373782662d715567e504ff203030`.
+Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Artifact permission-hardening passed backend [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) on head `4385760f5096c4e9292b0b38710370e98a179d0f`. Concurrent cleanup/history-retention changes passed on `30054013f0fd373782662d715567e504ff203030`; local history database symlink/permission hardening then passed backend [workflow #38239089798](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38239089798) and frontend [workflow #38239089957](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38239089957) on code/test head `cf994027ca6123bb7fb70f6ee50dd3ebb24f20c5`.
 
 ## Implemented
 
@@ -22,7 +22,7 @@ Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid
 - Local, single-user MVP only; there is no API authentication or user identity layer. Keep the API bound to localhost and do not expose it to a LAN/public network without separate authentication and network-control work.
 - Evidence may contain customer data or secrets emitted by tests. Enable retention only for trusted projects and deliberately selected evidence.
 - No cloud storage, remote uploads, AI processing, multi-user access, encryption-at-rest guarantee, or compliance guarantee.
-- Dedicated artifact directory/database permissions are tightened to `0700`/`0600` where supported. Normalized execution history is pruned by age and record count; defaults are 30 days and 500 records, configurable with `AAC_HISTORY_RETENTION_DAYS` and `AAC_HISTORY_MAX_RECORDS`. Same-user processes remain within the trust boundary.
+- Dedicated artifact and default history directories/database files are tightened to `0700`/`0600` where supported; symlinked history directory/database paths are rejected. Normalized execution history is pruned by age and record count; defaults are 30 days and 500 records, configurable with `AAC_HISTORY_RETENTION_DAYS` and `AAC_HISTORY_MAX_RECORDS`. Same-user processes remain within the trust boundary.
 - Local test execution is not a sandbox.
 
 ## Review follow-ups

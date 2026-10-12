@@ -1,12 +1,12 @@
 # PR #17 Security and Quality Review
 
-Review target: cumulative integration candidate `integration/evidence-retention-on-current-stack`. Latest code/test head reviewed: `4385760f5096c4e9292b0b38710370e98a179d0f`. Backend workflow [#38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend workflow [#38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) both passed on this exact head.
+Review target: cumulative integration candidate `integration/evidence-retention-on-current-stack`. Artifact permission-hardening head `4385760f5096c4e9292b0b38710370e98a179d0f` passed backend workflow [#38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend workflow [#38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630). Concurrent cleanup and history retention changes on `30054013f0fd373782662d715567e504ff203030` are pending CI.
 
 ## Review summary
 
 A focused review identified a filesystem time-of-check/time-of-use risk in artifact reads: a leaf path could theoretically be swapped for a symlink after path validation but before `read_bytes()`. The current change opens the artifact with `O_NOFOLLOW` where the platform supports it, validates the opened descriptor is a regular file, and bounds the read to the configured per-artifact limit. A regression test also verifies that a directory cannot be returned as an artifact. This narrows the local filesystem race surface but is not a complete defense against a hostile process with the same OS user or platforms lacking `O_NOFOLLOW`. Existing controls include generated artifact filenames, parameterized SQL, execution-scoped lookups, SHA-256 and byte-size verification, bounded retention, and connection-closing context managers.
 
-Validation: backend workflow [#38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend workflow [#38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) both passed on code/test head `4385760f5096c4e9292b0b38710370e98a179d0f`.
+Validation for artifact permission hardening: backend workflow [#38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend workflow [#38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) passed on code/test head `4385760f5096c4e9292b0b38710370e98a179d0f`. Latest concurrent cleanup/history retention validation is pending.
 
 This is not a security certification. The product remains a local-only developer tool.
 
@@ -18,7 +18,7 @@ Execution, history, status, and artifact endpoints do not enforce a user identit
 
 ### Filesystem permissions and database symlinks
 
-The latest change rejects a symlinked artifact root or SQLite database path before connecting, reapplies mode `0700` to the dedicated artifact directory and `0600` to the SQLite database where supported, and adds regression tests for database-symlink rejection and POSIX permissions. Unsupported filesystems/platforms may not honor POSIX modes. These controls do not defend against a hostile process running as the same OS user. History remains local and unencrypted.
+The latest change rejects a symlinked artifact root or SQLite database path before connecting, reapplies mode `0700` to the dedicated artifact directory and `0600` to the SQLite database where supported, and adds regression tests for database-symlink rejection and POSIX permissions. Unsupported filesystems/platforms may not honor POSIX modes. These controls do not defend against a hostile process running as the same OS user. History remains local and unencrypted; its rows are now pruned by configurable age and record-count limits.
 
 ### Scope checks
 

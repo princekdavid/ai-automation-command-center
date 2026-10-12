@@ -15,7 +15,7 @@ A framework-agnostic QA automation control plane. The current MVP discovers a lo
 - Opt-in local evidence artifact storage with per-file and total size limits, retention, and digest verification
 - Backend pytest and frontend build workflows in GitHub Actions
 
-The current cumulative candidate is [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17), kept as a draft and not merged. Additional framework adapters, remote repository connections, multi-user authentication/authorization, OS-level execution sandboxing, and AI analysis are not implemented. See [Implementation Status](IMPLEMENTATION_STATUS.md), [Changelog](CHANGELOG.md), and [the artifact-retention notes](docs/EVIDENCE_ARTIFACT_RETENTION.md).
+The current cumulative candidate is [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17), kept as a draft and not merged. Artifact cleanup is serialized through SQLite; current CI is validating this change and bounded history retention. Additional framework adapters, remote repository connections, multi-user authentication/authorization, OS-level execution sandboxing, and AI analysis are not implemented. See [Implementation Status](IMPLEMENTATION_STATUS.md), [Changelog](CHANGELOG.md), and [the artifact-retention notes](docs/EVIDENCE_ARTIFACT_RETENTION.md).
 
 ## Requirements
 
@@ -77,7 +77,7 @@ To point the frontend at another API URL, set `VITE_API_BASE_URL` before startin
 
 **Execution safety:** running a test may execute arbitrary code from that project. The authorization checkbox is not an OS-level sandbox or identity/access-control mechanism. Only authorize projects you trust. Keep the API bound to localhost. The API has no user authentication; do not expose it to a LAN, public network, or untrusted browser origin without implementing and reviewing authentication and network access controls.
 
-**Local history:** compact execution summaries are stored in SQLite at `~/.ai-automation-command-center/history.sqlite3` by default. Set `AAC_RUN_DB_PATH` to use another location. Raw stdout/stderr and raw per-test failure messages are not persisted; the database is not encrypted and has no retention policy yet.
+**Local history:** compact execution summaries are stored in SQLite at `~/.ai-automation-command-center/history.sqlite3` by default. Set `AAC_RUN_DB_PATH` to use another location. Raw stdout/stderr and raw per-test failure messages are not persisted; the database is not encrypted. History is pruned to 30 days and 500 records by default; configure `AAC_HISTORY_RETENTION_DAYS` and `AAC_HISTORY_MAX_RECORDS` to change those positive limits.
 
 **Evidence artifacts:** persistence is disabled by default. Enable it deliberately with `AAC_ARTIFACTS_ENABLED=true`; optionally set `AAC_ARTIFACTS_DIR` to a dedicated local directory. The default is `~/.ai-automation-command-center/artifacts`. JUnit reports may contain customer data, identifiers, or secrets emitted by tests. Treat artifact storage as sensitive local data; do not enable it for untrusted projects or store secrets intentionally. See [artifact-retention limits and known boundaries](docs/EVIDENCE_ARTIFACT_RETENTION.md).
 

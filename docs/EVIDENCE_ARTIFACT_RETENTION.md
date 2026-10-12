@@ -1,6 +1,6 @@
 # Evidence Artifact Storage and Retention
 
-Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Latest code/test head `4385760f5096c4e9292b0b38710370e98a179d0f` passed backend [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630). The artifact tests use the store's closing connection context manager for database updates.
+Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid/ai-automation-command-center/pull/17). Artifact permission-hardening passed backend [workflow #38171267669](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267669) and frontend [workflow #38171267630](https://github.com/princekdavid/ai-automation-command-center/actions/runs/38171267630) on head `4385760f5096c4e9292b0b38710370e98a179d0f`. Concurrent cleanup and history-retention changes are pending CI on `30054013f0fd373782662d715567e504ff203030`.
 
 ## Implemented
 
@@ -22,10 +22,10 @@ Status: implemented in cumulative draft [PR #17](https://github.com/princekdavid
 - Local, single-user MVP only; there is no API authentication or user identity layer. Keep the API bound to localhost and do not expose it to a LAN/public network without separate authentication and network-control work.
 - Evidence may contain customer data or secrets emitted by tests. Enable retention only for trusted projects and deliberately selected evidence.
 - No cloud storage, remote uploads, AI processing, multi-user access, encryption-at-rest guarantee, or compliance guarantee.
-- Dedicated artifact directory/database permissions are tightened to `0700`/`0600` where supported; history retention remains a follow-up. Same-user processes remain within the trust boundary.
+- Dedicated artifact directory/database permissions are tightened to `0700`/`0600` where supported. Normalized execution history is pruned by age and record count; defaults are 30 days and 500 records, configurable with `AAC_HISTORY_RETENTION_DAYS` and `AAC_HISTORY_MAX_RECORDS`. Same-user processes remain within the trust boundary.
 - Local test execution is not a sandbox.
 
 ## Review follow-ups
 
-- Continue evaluating concurrent cleanup behavior and filesystem race conditions as part of production hardening.
+- Concurrent artifact cleanup now takes a SQLite write lock before making retention decisions; validate the regression test in CI and continue evaluating filesystem race conditions.
 - Keep API responses restricted to opaque IDs and approved metadata; never expose storage keys or absolute paths.
